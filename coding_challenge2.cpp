@@ -9,13 +9,13 @@
 
 using namespace std;
 
-void printn(int n) {
-	int A=0;
-	printf("|");
-	for(A=0;A<n;A++) {
-		printf("-");
-	}
-}
+// void printn(int n) {
+// 	int A=0;
+// 	printf("|");
+// 	for(A=0;A<n;A++) {
+// 		printf("-");
+// 	}
+// }
 
 stack <string> vec;
 map<string, int> TAGS;
@@ -86,12 +86,12 @@ void print_element_names(int n, xmlNode * a_node) {
 			if (is_inline((char*)cur_node->name))
 				vec.push((char*)cur_node->name);
 			else
-				printf("<%s>",cur_node->name);
+				printf("[<%s>]",cur_node->name);
 			print_element_names(n+1, cur_node->children);
 			if (is_inline((char*)cur_node->name))
 				vec.pop();
 			else
-				printf("</%s>",cur_node->name);
+				printf("[</%s>]",cur_node->name);
 		}
 		else 
 		{
