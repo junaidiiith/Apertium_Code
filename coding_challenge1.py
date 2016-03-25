@@ -1,7 +1,7 @@
 import xml.dom.minidom
 import copy
 import sys
-string = "<p><b><i>Some random test</i> <u>string code</u></b>"
+string = "<p><b><i>Some random test</i> <u>string code</u></b></p>"
 input_str = xml.dom.minidom.parseString(string)
 input_str = input_str.childNodes
 Output = ''
