@@ -102,7 +102,15 @@ void print_element_names(int n, xmlNode * a_node) {
 			while (pch != NULL)
 			{  
 				print_stack();
-				printf ("%s ",pch);
+				int l = strlen(pch);
+				for(int i =0; i<l;i++)
+				{
+					if(pch[i]=='[' || pch[i] == ']')
+						printf("\\%c",pch[i]);
+					else
+						printf("%c",pch[i]);
+				}
+				printf(" ");
 				pch = strtok (NULL, " \t");
 			}  
 
