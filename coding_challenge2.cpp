@@ -86,7 +86,22 @@ void print_element_names(int n, xmlNode * a_node) {
 			if (is_inline((char*)cur_node->name))
 				vec.push((char*)cur_node->name);
 			else
-				printf("[<%s>]",cur_node->name);
+			{	
+				xmlAttr *cur_attr = NULL;
+    			xmlChar *attr;
+    			printf("[<%s",cur_node->name);
+    			for (cur_attr = cur_node->properties; cur_attr; cur_attr = cur_attr->next) 
+    			{
+
+	       			printf(" %s = ", cur_attr->name);
+
+	       			// This part fixed the code :D 
+	       			attr =  xmlNodeGetContent((xmlNode*)cur_attr);
+
+	      			printf("\'%s\'", attr);
+	    		}
+	    		printf(">]");
+			}
 			print_element_names(n+1, cur_node->children);
 			if (is_inline((char*)cur_node->name))
 				vec.pop();
@@ -102,15 +117,7 @@ void print_element_names(int n, xmlNode * a_node) {
 			while (pch != NULL)
 			{  
 				print_stack();
-				int l = strlen(pch);
-				for(int i =0; i<l;i++)
-				{
-					if(pch[i]=='[' || pch[i] == ']')
-						printf("\\%c",pch[i]);
-					else
-						printf("%c",pch[i]);
-				}
-				printf(" ");
+				printf ("%s ",pch);
 				pch = strtok (NULL, " \t");
 			}  
 
@@ -131,7 +138,7 @@ int main(int argc, char **argv)
 
 	LIBXML_TEST_VERSION
 
-		doc = xmlReadFile(argv[1], NULL, 0);
+	doc = xmlReadFile(argv[1], NULL, 0);
 
 	if (doc == NULL) {
 		printf("error: could not parse file %s\n", argv[1]);
