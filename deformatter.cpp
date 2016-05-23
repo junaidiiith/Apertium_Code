@@ -21,6 +21,8 @@ int indices = 1;
 
 stack <xmlNode*> vec;
 map<string, int> TAGS;
+bool in_inline = false;
+bool in_superblank = false;
 
 int is_inline(char *tag) {
 	if(TAGS.find(tag) != TAGS.end()) {
@@ -66,10 +68,8 @@ void init_tags() {
 void print_stack(ostream& attributes, ostream& outfile) {
 	if(!vec.size())
 		return;
-	outfile<<"[";
-	if(vec.size() > 1) {
-		outfile<<"{";
-	}
+	outfile<<"[{";
+	
 	for (std::stack<xmlNode*> dump = vec; !dump.empty(); dump.pop())
 	{	
 		xmlAttr *cur_attr = NULL;
@@ -93,10 +93,7 @@ void print_stack(ostream& attributes, ostream& outfile) {
 		attributes << "\n";
 		indices++;
 	}
-	if(vec.size() > 1) {
-		outfile<<"}";
-	}
-	outfile<<"]";
+	outfile<<"}]";
 }
 
 void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& outfile) {
@@ -106,14 +103,35 @@ void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& o
 		if (cur_node->type == XML_ELEMENT_NODE) {
 			//printn(n);
 			//printf("%s\n",cur_node->name);
+			// if(vec.empty())
+			// 	in_inline = false;
+			// if(!in_superblank && !in_inline)
+			// {
+			// 	outfile << "[";
+			// 	in_superblank = true;
+			// }
 			if (is_inline((char*)cur_node->name))
+			{	
+				if(in_superblank)
+				{
+					outfile << "]";
+					in_superblank = false;
+				}
 				vec.push((xmlNode*)cur_node);
+				// in_inline = true;
+				in_superblank = false;
+			}
 			else
 			{	
+				if(!in_superblank)
+				{
+					outfile << "[";
+					in_superblank = true;
+				}
 				xmlAttr *cur_attr = NULL;
     			xmlChar *attr;
     			// printf("[<%s%d",cur_node->name,indices);
-    			outfile << "[<" << cur_node->name << indices;
+    			outfile << "<" << cur_node->name << indices;
     			attributes << indices << "=";
 
     			for (cur_attr = cur_node->properties; cur_attr; cur_attr = cur_attr->next) 
@@ -130,7 +148,7 @@ void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& o
 	    		}
 	    		attributes << "\n";
 	    		// cout << ">]";
-	    		outfile << ">]";
+	    		outfile << ">";
 	    		indices++;
 			}
 			print_element_names(n+1, cur_node->children, attributes,outfile);
@@ -145,18 +163,44 @@ void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& o
 			char* strng;
 			strng = (char*)cur_node->content;
 			char * pch;
-			pch = strtok (strng," \t");
+			pch = strtok (strng," \t\n");
+			int flag = 0;
 			while (pch != NULL)
 			{  
+				if(in_superblank && !flag)
+				{
+					outfile << "]";
+					flag = 1;
+					in_superblank = false;
+				}
 				print_stack(attributes,outfile);
 				outfile << pch << " ";
-				pch = strtok (NULL, " \t");
+				pch = strtok (NULL, " \t\n");
 			}  
 
 			//printf(">>%s(%d)<<",cur_node->content,n);
 			//printf("%s",cur_node->content);
 		}
 	}
+}
+void merge_blocks(string s )
+{	
+	int l = s.length();
+	int i = 0;
+	string ans="";
+	while(i<l)
+	{	
+		if(i+2 > l)
+			break;
+		if(s[i]==']' && s[i+1]=='[' && s[i+2]!='{')
+			i+=2;
+		else if(s[i]=='[' && s[i+1]=='<' && s[i+2]=='/')
+			ans += "[]";
+		ans += s[i];
+		i++;
+	}
+	ofstream outputfile ("deformatter_output.txt");
+	outputfile << ans << endl;
 }
 
 int main(int argc, char **argv)
@@ -167,13 +211,8 @@ int main(int argc, char **argv)
 		cout << "Unable to open attributes file\n";
 		return 0;
 	}
-	ofstream outfile ("deformatter_output.txt");
-	if(!outfile.is_open())
-	{
-		cout << "Unable to open attributes file\n";
-		return 0;
-	}
-
+	ofstream outfile ("temp.txt");
+	
 	init_tags();
 	xmlDoc *doc = NULL;
 	xmlNode *root_element = NULL;
@@ -197,6 +236,11 @@ int main(int argc, char **argv)
 	xmlFreeDoc(doc);
 
 	xmlCleanupParser();
+
+	ifstream in("temp.txt");
+	std::string s((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+	merge_blocks(s);
+	// cout << s;
 
 	return 0;
 }
