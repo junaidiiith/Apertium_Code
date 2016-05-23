@@ -39,24 +39,37 @@ bool compound_sep = false;
 void readAndWriteUntil(FILE *input, FILE *output, int const charcode, wstring &temp)
 {
   int mychar;
-  temp.append(L"[");
+  int flag = 1;
   while((mychar = fgetwc_unlocked(input)) != charcode)
-  {
+  { 
+    if(flag == 1)
+    {
+      flag = 0;
+      if(mychar == L'{')
+        flag = 2;
+      if(flag == 2)
+        temp.append(L"[");
+      else
+        temp = L"";
+    }
     if(feof(input))
     {
       wcerr << L"ERROR: Unexpected EOF" << endl;
       exit(EXIT_FAILURE);
     }
     fputwc_unlocked(mychar, output);
-    temp += mychar;
+    if(flag == 2)
+      temp += mychar;
     if(mychar == L'\\')
     {
       mychar = fgetwc(input);
       fputwc(mychar, output);
-      temp += mychar;
+      if(flag == 2)
+        temp += mychar;
     }
   }
-  temp.append(L"]");
+  if(flag == 2)
+    temp.append(L"]");
 }
 
 void procWord(FILE *input, FILE *output, bool surface_forms, wstring &temp)
