@@ -87,7 +87,7 @@ void print_stack(ostream& attributes, ostream& outfile) {
    			attr =  xmlNodeGetContent((xmlNode*)cur_attr);
 
   			//printf("\'%s\'", attr);
-  			attributes << "\'" << attr << "\'";
+  			attributes << "\"" << attr << "\"";
 		}
 		outfile << ">";
 		attributes << "\n";
@@ -144,7 +144,7 @@ void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& o
 	       			attr =  xmlNodeGetContent((xmlNode*)cur_attr);
 
 	      			//printf("\'%s\'", attr);
-	      			attributes << "\'" << attr << "\'";
+	      			attributes << "\"" << attr << "\"";
 	    		}
 	    		attributes << "\n";
 	    		// cout << ">]";
