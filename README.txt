@@ -20,8 +20,9 @@ It has a prerequisites of libxml2
 
 To run the deformatter on your example.xml file run the following commands
 
-1. tidy -quiet -asxml -xml -indent -wrap 1024 --hide-comments 1 example.html > input.html
-2. g++ deformatter.cpp -I/usr/include/libxml2 -lxml2 -o deform
-3. ./deform input.html
-4. g++ refor.cpp -std=c++11 -o reform
-5. tidy -quiet -asxml -xml -indent -wrap 1024 --hide-comments 1 output.html
+
+1. g++ deformatter.cpp -I/usr/include/libxml2 -lxml2 -o deform
+2. ./deform input.html
+3. g++ refor.cpp -std=c++11 -o reform
+4. ./reform > output.html
+5. tidy -quiet -asxml -xml -indent -wrap 1024 --hide-comments 1 output.html > reformatted_output.html
