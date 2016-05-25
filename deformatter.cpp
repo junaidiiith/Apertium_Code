@@ -10,13 +10,6 @@
 
 using namespace std;
 
-// void printn(int n) {
-// 	int A=0;
-// 	printf("|");
-// 	for(A=0;A<n;A++) {
-// 		printf("-");
-// 	}
-// }
 int indices = 1;
 
 stack <xmlNode*> vec;
@@ -101,15 +94,7 @@ void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& o
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
-			//printn(n);
-			//printf("%s\n",cur_node->name);
-			// if(vec.empty())
-			// 	in_inline = false;
-			// if(!in_superblank && !in_inline)
-			// {
-			// 	outfile << "[";
-			// 	in_superblank = true;
-			// }
+
 			if (is_inline((char*)cur_node->name))
 			{	
 				if(in_superblank)
@@ -153,33 +138,46 @@ void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& o
 			}
 			print_element_names(n+1, cur_node->children, attributes,outfile);
 			if (is_inline((char*)cur_node->name))
+			{	
 				vec.pop();
+				//outfile << "[]";
+			}
 			else
-				outfile << "[</" << cur_node->name << ">]";
+				outfile << "[<\\/" << cur_node->name << ">]";
 				// printf("[</%s>]",cur_node->name);
 		}
 		else 
 		{
 			char* strng;
 			strng = (char*)cur_node->content;
-			char * pch;
-			pch = strtok (strng," \t\n");
-			int flag = 0;
-			while (pch != NULL)
-			{  
-				if(in_superblank && !flag)
-				{
-					outfile << "]";
-					flag = 1;
-					in_superblank = false;
-				}
-				print_stack(attributes,outfile);
-				outfile << pch << " ";
-				pch = strtok (NULL, " \t\n");
-			}  
 
-			//printf(">>%s(%d)<<",cur_node->content,n);
-			//printf("%s",cur_node->content);
+			print_stack(attributes,outfile);
+			int indexx = 0;
+			int str_len = strlen(strng);
+			while(indexx < str_len)
+			{
+				if(strng[indexx]=='\n' || strng[indexx]=='\t')
+				{	
+					if(!in_superblank)
+					{	
+						int temp = indexx;
+						outfile << "[";
+						while(strng[temp] == ' ' || strng[temp]== '\n')
+						{
+							outfile << strng[temp];
+							temp++;
+						}
+						indexx = temp;
+						outfile << "]";
+					}
+					else
+						outfile << strng[indexx];
+				}
+				else
+					outfile << strng[indexx];
+				indexx++;
+			}
+			
 		}
 	}
 }
