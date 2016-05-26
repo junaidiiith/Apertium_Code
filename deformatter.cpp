@@ -150,7 +150,7 @@ void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& o
 			{	
 				outfile << "[]";
 				vec.pop();
-				
+
 			}
 			else
 			{	
@@ -158,9 +158,12 @@ void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& o
 			}
 		}
 		else 
-		{
+		{	
+
 			char* strng;
 			strng = (char*)cur_node->content;
+			// if(in_superblank && !strng)
+			// 	outfile << "]";
 			int l = strlen(strng);
 
 			int num = 0;
@@ -169,6 +172,11 @@ void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& o
 			//outfile << num;
 			if(num < l)
 			{	
+				if(in_superblank)
+				{
+					in_superblank = false;
+					outfile << "]";
+				}
 				int k = 0;
 				print_stack(attributes,outfile);
 				while(k+1 < l)
@@ -218,7 +226,7 @@ void merge_blocks(string s )
 	int l = s.length();
 	int i = 0;
 	string ans="";
-	//cout << s << endl << endl;
+	cout << s << endl << endl;
 	bool block;
 
 	while(i<l)
@@ -231,7 +239,7 @@ void merge_blocks(string s )
 		i++;
 	}
 
-	//cout << ans << endl << endl;
+	cout << ans << endl << endl;
 
 	i = 0;
 	string ans1 = "";
