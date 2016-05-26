@@ -58,6 +58,14 @@ void init_tags() {
 	TAGS["var"] = 1;
 }
 
+bool is_blank(char ch)
+{
+	if(ch == ' ' || ch == '\n' || ch == '\t')
+		return true;
+	else
+		return false;
+}
+
 void print_stack(ostream& attributes, ostream& outfile) {
 	if(!vec.size())
 		return;
@@ -69,6 +77,7 @@ void print_stack(ostream& attributes, ostream& outfile) {
     	xmlChar *attr;
     	xmlNode *cur_node = dump.top();
 		outfile << "<"<<cur_node->name <<  indices;
+		//outfile << "Node is " << cur_node->name;
 		attributes << indices << "=";
     	for (cur_attr = cur_node->properties; cur_attr; cur_attr = cur_attr->next) 
 		{
@@ -86,10 +95,10 @@ void print_stack(ostream& attributes, ostream& outfile) {
 		attributes << "\n";
 		indices++;
 	}
-	outfile<<"}]";
+	outfile << "}]";
 }
 
-void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& outfile) {
+void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& outfile, xmlNode* parent) {
 	xmlNode *cur_node = NULL;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
@@ -132,73 +141,183 @@ void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& o
 	      			attributes << "\"" << attr << "\"";
 	    		}
 	    		attributes << "\n";
-	    		// cout << ">]";
+	    		// outfile << ">]";
 	    		outfile << ">";
 	    		indices++;
 			}
-			print_element_names(n+1, cur_node->children, attributes,outfile);
+			print_element_names(n+1, cur_node->children, attributes,outfile, cur_node);
 			if (is_inline((char*)cur_node->name))
 			{	
+				outfile << "[]";
 				vec.pop();
-				//outfile << "[]";
+				
 			}
 			else
+			{	
 				outfile << "[<\\/" << cur_node->name << ">]";
-				// printf("[</%s>]",cur_node->name);
+			}
 		}
 		else 
 		{
 			char* strng;
 			strng = (char*)cur_node->content;
+			int l = strlen(strng);
 
-			print_stack(attributes,outfile);
-			int indexx = 0;
-			int str_len = strlen(strng);
-			while(indexx < str_len)
-			{
-				if(strng[indexx]=='\n' || strng[indexx]=='\t')
+			int num = 0;
+			while(is_blank(strng[num]))
+				num++;
+			//outfile << num;
+			if(num < l)
+			{	
+				int k = 0;
+				print_stack(attributes,outfile);
+				while(k+1 < l)
 				{	
-					if(!in_superblank)
+					
+					if(is_blank(strng[k]) && is_blank(strng[k+1]))
 					{	
-						int temp = indexx;
-						outfile << "[";
-						while(strng[temp] == ' ' || strng[temp]== '\n')
-						{
-							outfile << strng[temp];
-							temp++;
+						string buf="";
+						int t = k;
+						while(t < l)
+						{	if(is_blank(strng[t]))
+							{
+								buf += strng[t];
+								t++;
+							}
+							else
+								break;
 						}
-						indexx = temp;
-						outfile << "]";
+						//outfile << "hello\n";
+						outfile << "[" << buf << "]";
+						k = t;
 					}
 					else
-						outfile << strng[indexx];
+					{
+						outfile << strng[k];
+						k++;
+					}
 				}
-				else
-					outfile << strng[indexx];
-				indexx++;
+				if(k < l)
+					outfile << strng[k];
 			}
-			
+			else
+			{	
+				if(!in_superblank)
+					outfile << "[" << strng << "]";
+				else
+					outfile << strng;
+			}
 		}
 	}
 }
+
+
+
 void merge_blocks(string s )
 {	
 	int l = s.length();
 	int i = 0;
 	string ans="";
+	//cout << s << endl << endl;
+	bool block;
+
 	while(i<l)
 	{	
 		if(i+2 > l)
 			break;
 		if(s[i]==']' && s[i+1]=='[' && s[i+2]!='{')
 			i+=2;
-		else if(s[i]=='[' && s[i+1]=='<' && s[i+2]=='/')
-			ans += "[]";
 		ans += s[i];
 		i++;
 	}
+
+	//cout << ans << endl << endl;
+
+	i = 0;
+	string ans1 = "";
+	l = ans.length();
+	while(i < l)
+	{
+		if(ans[i] == '[')
+		{	
+			bool blank = true;
+			int k = i+1;
+			string buf="[";
+			while(ans[k]!=']')
+			{
+				buf += ans[k];
+				if(!is_blank(ans[k]))
+					blank = false;
+				k++;
+			}
+			buf += "]";
+			int j = k;
+			if(blank)
+			{	
+				int alpha_found = 1;
+				while(true)
+				{
+					if(isalpha(ans[j]))
+					{
+						alpha_found = 1;
+						break;
+					}
+					if(ans[j] == '[')
+					{
+						alpha_found = 0;
+						break;
+					}
+					j++;
+				}
+				if(!alpha_found)
+					ans1 += buf;
+				i = k+1;
+			}
+			else
+			{
+				ans1 += buf;
+				i = k + 1; 
+			}
+		}
+		else
+			ans1 += ans[i++];
+	}
+
+
+
+	i = 0;
+	string ans2="";
+	l = ans1.length();
+	while(i<l)
+	{	
+		if(ans1[i]=='[')
+		{	
+			block = false;
+			int k = i;
+			string buf="";
+			while(ans1[k]!=']' && k+1 < l)
+			{
+				if(ans1[k]=='<' && ans1[k+1] =='\\')
+					block = true;
+				buf += ans1[k];
+				k++;
+			}
+			buf += "]";
+			if(block)
+				ans2 += "[]" + buf;
+			else
+				ans2 += buf;
+			i = k+1;
+		}
+		else
+			ans2 += ans1[i++];		
+	}
+
+	//cout << ans2 << endl << endl;
+
+
 	ofstream outputfile ("deformatter_output.txt");
-	outputfile << ans << endl;
+	outputfile << ans2 << endl;
 }
 
 int main(int argc, char **argv)
@@ -228,7 +347,7 @@ int main(int argc, char **argv)
 
 	root_element = xmlDocGetRootElement(doc);
 
-	print_element_names(0,root_element,attributes,outfile);
+	print_element_names(0,root_element,attributes,outfile, NULL);
 	outfile<<endl;
 
 	xmlFreeDoc(doc);
@@ -238,7 +357,7 @@ int main(int argc, char **argv)
 	ifstream in("temp.txt");
 	std::string s((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 	merge_blocks(s);
-	// cout << s;
+	// outfile << s;
 
 	return 0;
 }
