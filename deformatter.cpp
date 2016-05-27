@@ -226,7 +226,11 @@ void merge_blocks(string s )
 	int l = s.length();
 	int i = 0;
 	string ans="";
+<<<<<<< HEAD
 	//cout << s << endl << endl;
+=======
+//	cout << s << endl << endl;
+>>>>>>> 86a6183047d67b9e4b65f99bed2122f43c62acc3
 	bool block;
 
 	while(i<l)
@@ -239,7 +243,11 @@ void merge_blocks(string s )
 		i++;
 	}
 
+<<<<<<< HEAD
 	//cout << ans << endl << endl;
+=======
+//	cout << ans << endl << endl;
+>>>>>>> 86a6183047d67b9e4b65f99bed2122f43c62acc3
 
 	i = 0;
 	string ans1 = "";
