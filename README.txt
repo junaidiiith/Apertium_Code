@@ -25,4 +25,3 @@ To run the deformatter on your example.xml file run the following commands
 2. ./deform input.html
 3. g++ reformatter.cpp -std=c++11 -o reform
 4. ./reform > output.html
-5. tidy -quiet -asxml -xml -indent -wrap 1024 --hide-comments 1 output.html > reformatted_output.html
