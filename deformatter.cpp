@@ -226,7 +226,7 @@ void merge_blocks(string s )
 	int l = s.length();
 	int i = 0;
 	string ans="";
-	cout << s << endl << endl;
+	//cout << s << endl << endl;
 	bool block;
 
 	while(i<l)
@@ -239,7 +239,7 @@ void merge_blocks(string s )
 		i++;
 	}
 
-	cout << ans << endl << endl;
+	//cout << ans << endl << endl;
 
 	i = 0;
 	string ans1 = "";
@@ -274,7 +274,7 @@ void merge_blocks(string s )
 	}
 
 	ofstream outputfile ("deformatter_output.txt");
-	outputfile << ans1;
+	//outputfile << ans1;
 	cout << ans1 << endl;
 }
 
