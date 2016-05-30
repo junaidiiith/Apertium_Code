@@ -275,39 +275,6 @@ void merge_blocks(string s )
 		}
 	}
 
-
-
-/*	i = 0;
-	string ans2="";
-	l = ans1.length();
-	while(i<l)
-	{	
-		if(ans1[i]=='[')
-		{	
-			block = false;
-			int k = i;
-			string buf="";
-			while(ans1[k]!=']' && k+1 < l)
-			{
-				if(ans1[k]=='<' && ans1[k+1] =='\\')
-					block = true;
-				buf += ans1[k];
-				k++;
-			}
-			buf += "]";
-			if(block)
-				ans2 += "[]" + buf;
-			else
-				ans2 += buf;
-			i = k+1;
-		}
-		else
-			ans2 += ans1[i++];		
-	}
-*/
-	//cout << ans2 << endl << endl;
-
-
 	ofstream outputfile ("deformatter_output.txt");
 	outputfile << ans1 << endl;
 }
