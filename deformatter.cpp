@@ -226,7 +226,7 @@ void merge_blocks(string s )
 	int l = s.length();
 	int i = 0;
 	string ans="";
-	//cout << s << endl << endl;
+	cout << s << endl << endl;
 	bool block;
 
 	while(i<l)
@@ -239,7 +239,7 @@ void merge_blocks(string s )
 		i++;
 	}
 
-	//cout << ans << endl << endl;
+	cout << ans << endl << endl;
 
 	i = 0;
 	string ans1 = "";
@@ -248,7 +248,7 @@ void merge_blocks(string s )
 	{
 		if(ans[i] == '[' && ans[i+1] == ']')
 		{	
-			string buf = "";
+			string buf = "[]";
 			int j = i+2;
 			int non_super_found = 1;
 			while(true)
@@ -258,11 +258,9 @@ void merge_blocks(string s )
 					non_super_found = 0;
 					break;
 				}
-				else
-				{
-					non_super_found = 1;
+				else	
 					break;
-				}
+			
 				j++;
 			}
 			if(!non_super_found)
@@ -276,7 +274,8 @@ void merge_blocks(string s )
 	}
 
 	ofstream outputfile ("deformatter_output.txt");
-	outputfile << ans1 << endl;
+	outputfile << ans1;
+	cout << ans1 << endl;
 }
 
 int main(int argc, char **argv)

@@ -60,7 +60,9 @@ string trim(string& str)
 
 int main(int argc, char **argv)
 {	
-
+	if(argc !=2)
+		return 1;
+	
 	ifstream myfile ("tag_attributes.txt");
 
 	string line;
@@ -76,7 +78,7 @@ int main(int argc, char **argv)
 	}
 
 	
-	ifstream in("deformatter_output.txt");
+	ifstream in(argv[1]);
 	std::string s((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 	init_tags();
 	//cin >> s;
