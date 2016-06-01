@@ -60,9 +60,8 @@ string trim(string& str)
 
 int main(int argc, char **argv)
 {	
-	if(argc !=2)
+	if(argc != 2)
 		return 1;
-	
 	ifstream myfile ("tag_attributes.txt");
 
 	string line;
@@ -95,10 +94,18 @@ int main(int argc, char **argv)
 		{
 			if(s[i+1] == ']')
 			{	
+				stack<pair<string,int>> temp;
+
 				while(!mystack.empty())
 				{
-					cout << "</" << mystack.top().first << ">";
+					//cout << "</" << mystack.top().first << ">";
+					temp.push(mystack.top());
 					mystack.pop();
+				}
+				while(!temp.empty())
+				{
+					cout << "</" << temp.top().first << ">";
+					temp.pop();
 				}
 			}
 			else if(s[i+1]=='{' && i+1 < l)
@@ -136,11 +143,20 @@ int main(int argc, char **argv)
 			else
 			{	
 			
+				stack<pair<string,int>> temp;
+
 				while(!mystack.empty())
 				{
-					cout << "</" << mystack.top().first << ">";
+					//cout << "</" << mystack.top().first << ">";
+					temp.push(mystack.top());
 					mystack.pop();
 				}
+				while(!temp.empty())
+				{
+					cout << "</" << temp.top().first << ">";
+					temp.pop();
+				}
+				
 				int j = i+1;
 				while(s[j] != ']' && j < l)
 				{	
