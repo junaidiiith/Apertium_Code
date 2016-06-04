@@ -7,55 +7,28 @@
 #include <utility>
 using namespace std;
 
-map<string, int> TAGS;
 map<int,string> att_hash;
-
-int is_inline(string tag) {
-	if(TAGS.find(tag) != TAGS.end()) {
-		return 1;
-	}
-	return 0;
-}
-
-
-void init_tags() {
-	TAGS["em"] = 1;
-	TAGS["u"] = 1;
-	TAGS["i"] = 1;
-	TAGS["b"] = 1;
-	TAGS["span"] = 1;
-	TAGS["a"] = 1;
-	TAGS["abbr"] = 1;
-	TAGS["bdo"] = 1;
-	TAGS["big"] = 1;
-	TAGS["cite"] = 1;
-	TAGS["code"] = 1;
-	TAGS["dfn"] = 1;
-	TAGS["font"] = 1;
-	TAGS["img"] = 1;
-	TAGS["input"] = 1;
-	TAGS["kbd"] = 1;
-	TAGS["label"] = 1;
-	TAGS["q"] = 1;
-	TAGS["s"] = 1;
-	TAGS["samp"] = 1;
-	TAGS["select"] = 1;
-	TAGS["small"] = 1;
-	TAGS["strike"] = 1;
-	TAGS["strong"] = 1;
-	TAGS["sub"] = 1;
-	TAGS["sup"] = 1;
-	TAGS["textarea"] = 1;
-	TAGS["tt"] = 1;
-	TAGS["u"] = 1;
-	TAGS["var"] = 1;
-}
 
 string trim(string& str)
 {
     size_t first = str.find_first_not_of(' ');
     size_t last = str.find_last_not_of(' ');
     return str.substr(first, (last-first+1));
+}
+
+void empty_stack(stack<pair< string, int>> &mystack)
+{
+	stack<pair<string,int>> temp;
+	while(!mystack.empty())
+	{
+		temp.push(mystack.top());
+		mystack.pop();
+	}
+	while(!temp.empty())
+	{
+		cout << "</" << temp.top().first << ">";
+		temp.pop();
+	}
 }
 
 int main(int argc, char **argv)
@@ -75,77 +48,46 @@ int main(int argc, char **argv)
 
 		att_hash[num] = str;
 	}
-
-	
 	ifstream in(argv[1]);
 	std::string s((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-	init_tags();
-	//cin >> s;
-	//cout << s;
 	
 	int l = s.length();
-	//cout << l;
 	stack<pair<string,int>> mystack;
 	int i = 0;
 	while(i<l)
 	{	
-		
 		if(((s[i] == '[' && i == 0) || (s[i] == '[' && s[i-1] != '\\')) && i+1 < l)
-		{
-			if(s[i+1] == ']')
+		{	
+			empty_stack(mystack);
+			if(s[i+1]=='{' && i+1 < l)
 			{	
-				stack<pair<string,int>> temp;
-
-				while(!mystack.empty())
-				{
-					//cout << "</" << mystack.top().first << ">";
-					temp.push(mystack.top());
-					mystack.pop();
-				}
-				while(!temp.empty())
-				{
-					cout << "</" << temp.top().first << ">";
-					temp.pop();
-				}
-			}
-			else if(s[i+1]=='{' && i+1 < l)
-			{	
-				stack<pair<string,int>> temp;
-
-				while(!mystack.empty())
-				{
-					//cout << "</" << mystack.top().first << ">";
-					temp.push(mystack.top());
-					mystack.pop();
-				}
-				while(!temp.empty())
-				{
-					cout << "</" << temp.top().first << ">";
-					temp.pop();
-				}
 				int j = i+2;
 				while(s[j] != '}')
-				{
+				{	
 					string tag;
+
 					while(s[j]!='<')
 						cout << s[j++];
-						
 					j++;
 					while(s[j] != '>')
+					{	
+						//cout << s[j];
 						tag = tag + s[j++];
+					}
+					j++;
 
 					
 					int pos = 0;
+					int tlen = tag.length();
 					while(isalpha(tag[pos++]));
 					string att_tag = tag.substr(0,pos-1);
-					
-					int ind = stoi(tag.substr(pos-1,tag.length()));
+					int ind = stoi(tag.substr(pos-1,tlen-pos-1));
+
 					
 					mystack.push(make_pair(trim(att_tag),ind));
-					j++;
 				}
 				
-				temp = mystack;
+				stack<pair<string,int>> temp = mystack;
 				while(!temp.empty())
 				{
 					cout << "<" << temp.top().first << att_hash[temp.top().second] << ">";
@@ -155,21 +97,6 @@ int main(int argc, char **argv)
 			}
 			else
 			{	
-			
-				stack<pair<string,int>> temp;
-
-				while(!mystack.empty())
-				{
-					//cout << "</" << mystack.top().first << ">";
-					temp.push(mystack.top());
-					mystack.pop();
-				}
-				while(!temp.empty())
-				{
-					cout << "</" << temp.top().first << ">";
-					temp.pop();
-				}
-				
 				int j = i+1;
 				while(s[j] != ']' && j < l)
 				{	
@@ -180,6 +107,7 @@ int main(int argc, char **argv)
 						bool closing_tag = false;
 						while(s[j] != '>')
 							tag = tag + s[j++];
+						j++;
 						int k = 0;
 						int ltag = tag.length();
 						while(k < ltag)
@@ -200,11 +128,9 @@ int main(int argc, char **argv)
 							int pos = 0;
 							while(isalpha(tag[pos++]));
 							string att_tag = tag.substr(0,pos-1);
-							int ind = stoi(tag.substr(pos-1,tag.length()));
+							int ind = stoi(tag.substr(pos-1,tag.length()-pos-1));
 							cout << "<" << trim(att_tag) << att_hash[ind] << ">";
 						}
-						j++;
-						
 					}
 					else
 						cout << s[j++];			
