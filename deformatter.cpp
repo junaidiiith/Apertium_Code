@@ -274,8 +274,9 @@ void merge_blocks(string s )
 	}
 
 	ofstream outputfile ("deformatter_output.txt");
-	//outputfile << ans1;
+	
 	cout << ans1 << endl;
+	outputfile << ans1 << endl;
 }
 
 int main(int argc, char **argv)
