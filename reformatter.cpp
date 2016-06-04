@@ -110,6 +110,19 @@ int main(int argc, char **argv)
 			}
 			else if(s[i+1]=='{' && i+1 < l)
 			{	
+				stack<pair<string,int>> temp;
+
+				while(!mystack.empty())
+				{
+					//cout << "</" << mystack.top().first << ">";
+					temp.push(mystack.top());
+					mystack.pop();
+				}
+				while(!temp.empty())
+				{
+					cout << "</" << temp.top().first << ">";
+					temp.pop();
+				}
 				int j = i+2;
 				while(s[j] != '}')
 				{
@@ -131,7 +144,7 @@ int main(int argc, char **argv)
 					mystack.push(make_pair(trim(att_tag),ind));
 					j++;
 				}
-				stack<pair<string,int>> temp;
+				
 				temp = mystack;
 				while(!temp.empty())
 				{
