@@ -7,6 +7,10 @@
 #include <libxml/tree.h>
 #include <iostream>
 #include <fstream>
+#include <sstream>
+#include <stdio.h>
+#include <sqlite3.h>
+#include <stdlib.h>
 
 using namespace std;
 
@@ -23,7 +27,8 @@ int is_inline(char *tag) {
 	}
 	return 0;
 }
-
+map <int, string > closing_tags;
+map <int, string > opening_tags;
 
 void init_tags() {
 	TAGS["em"] = 1;
@@ -66,39 +71,43 @@ bool is_blank(char ch)
 		return false;
 }
 
-void print_stack(ostream& attributes, ostream& outfile) {
+void print_stack(ostream& outfile) {
 	if(!vec.size())
 		return;
 	outfile<<"[{";
-	
+	int comma = 0;
 	for (std::stack<xmlNode*> dump = vec; !dump.empty(); dump.pop())
 	{	
+		stringstream opening_temp_tag;
 		xmlAttr *cur_attr = NULL;
     	xmlChar *attr;
     	xmlNode *cur_node = dump.top();
-		outfile << "<" << indices;
-		//outfile << "Node is " << cur_node->name << "," << cur_node->name;
-		attributes << indices << "=" << cur_node->name << "," << cur_node->name;
+    	if(comma)
+			outfile <<"," << indices;
+		else
+			outfile << indices;
+		comma = 1;
+		opening_temp_tag << "<" << cur_node->name; 
+		
     	for (cur_attr = cur_node->properties; cur_attr; cur_attr = cur_attr->next) 
 		{
 
-   			//printf(" %s = ", cur_attr->name);
-   			attributes << " " << cur_attr->name << " = ";
-
-   			// This part fixed the code :D 
+   			opening_temp_tag << " " << cur_attr->name << "=";
    			attr =  xmlNodeGetContent((xmlNode*)cur_attr);
 
-  			//printf("\'%s\'", attr);
-  			attributes << "\"" << attr << "\"";
+  			opening_temp_tag << "\"" << attr << "\"";
 		}
-		outfile << ">";
-		attributes << "\n";
+		opening_temp_tag << ">";
+		opening_tags[indices] = opening_temp_tag.str();
+		stringstream closing_temp_tag;
+		closing_temp_tag << "</" << cur_node->name << ">";
+		closing_tags[indices] = closing_temp_tag.str();
 		indices++;
 	}
 	outfile << "}]";
 }
 
-void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& outfile, xmlNode* parent) {
+void print_element_names(xmlNode * a_node, ostream& outfile) {
 	xmlNode *cur_node = NULL;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
@@ -125,27 +134,18 @@ void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& o
 				xmlAttr *cur_attr = NULL;
     			xmlChar *attr;
     			// printf("[<%s%d",cur_node->name,indices);
-    			outfile << "<" << indices;
-    			attributes << indices << "=" << cur_node->name << "," << cur_node->name;
+    			outfile << "<" << cur_node->name;
+    			//attributes << indices << "=<" << cur_node->name;
 
     			for (cur_attr = cur_node->properties; cur_attr; cur_attr = cur_attr->next) 
     			{
-
-	       			//printf(" %s = ", cur_attr->name);
-	       			attributes << " " << cur_attr->name << " = ";
-
-	       			// This part fixed the code :D 
+    				outfile << " " << cur_attr->name << " = ";
 	       			attr =  xmlNodeGetContent((xmlNode*)cur_attr);
-
-	      			//printf("\'%s\'", attr);
-	      			attributes << "\"" << attr << "\"";
+	      			outfile << "\"" << attr << "\"";
 	    		}
-	    		attributes << "\n";
-	    		// outfile << ">]";
 	    		outfile << ">";
-	    		indices++;
 			}
-			print_element_names(n+1, cur_node->children, attributes,outfile, cur_node);
+			print_element_names(cur_node->children,outfile);
 			if (is_inline((char*)cur_node->name))
 			{	
 				outfile << "[]";
@@ -178,7 +178,7 @@ void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& o
 					outfile << "]";
 				}
 				int k = 0;
-				print_stack(attributes,outfile);
+				print_stack(outfile);
 
 				string start_blank="";
 				while(is_blank(strng[k]) && k < l)
@@ -242,9 +242,8 @@ void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& o
 
 
 
-void merge_blocks(string s )
-{	
-	ofstream outputfile ("deformatter_output.txt");
+string merge_blocks(string s)
+{		
 	int l = s.length();
 	int i = 1;
 	string ans="";
@@ -262,23 +261,24 @@ void merge_blocks(string s )
 		ans += s[i];
 		i++;
 	}
-
-	// cout << ans << endl << endl;
-	//outputfile << ans << endl << endl;
-
-	i = 0;
-	string ans1 = "";
-	l = ans.length();
+	return ans;
+}
+	
+string remove_repeatition_superblanks(string s)
+{
+	int i = 0;
+	string ans = "";
+	int l = s.length();
 	while(i < l)
 	{
-		if(ans[i] == '[' && ans[i+1] == ']')
+		if(s[i] == '[' && s[i+1] == ']')
 		{	
 			string buf = "[]";
 			int j = i+2;
 			int non_super_found = 1;
 			while(true)
 			{
-				if(ans[j] != '[')
+				if(s[j] != '[')
 				{
 					non_super_found = 0;
 					break;
@@ -289,23 +289,115 @@ void merge_blocks(string s )
 				j++;
 			}
 			if(!non_super_found)
-				ans1 += buf;
+				ans += buf;
 			i = j;
 		}
 		else
 		{
-			ans1 += ans[i++];
+			ans += s[i++];
 		}
 	}
-
-	
-	
-	cout << ans1 << endl;
-	outputfile << ans1 << endl;
+	return ans;
 }
+
+
+string add_non_inline_as_ids(ostream& attributes, string s)
+{	
+	int i = 0;
+	int l = s.length();
+	string ans="";
+	while(i+1 < l)
+	{
+		if(s[i]=='[' && s[i+1]!='{')
+		{
+			int j = i+1;
+			bool just_blank = true;
+			string buf="";
+			while(j < l && s[j]!=']')
+			{
+				if(!is_blank(s[j]))
+					just_blank = false;
+				buf += s[j++];
+			}
+			if(!just_blank)
+			{
+				ans += "[" + to_string(indices) + "]";
+				opening_tags[indices] = buf;
+				closing_tags[indices] = "";
+				//attributes << "\n" << indices << "=" << buf;
+				indices++;
+			}
+			else
+			{
+				ans += "[" + buf + "]";
+			}
+			i = j+1;
+		}
+		else
+			ans += s[i++];
+	}
+	return ans;
+}
+void print_maps()
+{
+
+	for(int i=1;i<indices; i++)
+	{
+		cout << i << " = " << opening_tags[i] << "," << closing_tags[i] << endl;
+	}
+}
+
+void put_in_database(string filename)
+{	
+	char *zErr;
+	sqlite3 *db;
+	sqlite3_open(filename.c_str(), & db);
+
+	int rc = sqlite3_exec(db,"drop table TAGS_DATA" , NULL, NULL, &zErr);
+
+/*	if(rc != SQLITE_OK)
+ 	{
+  		if (zErr != NULL)
+  		{
+   			cout << "SQL error: " << zErr << endl;
+   			sqlite3_free(zErr);
+  		}
+ 	}*/
+	string createQuery = "CREATE TABLE IF NOT EXISTS TAGS_DATA (id INTEGER , opening TEXT,closing TEXT);";
+  	sqlite3_stmt *createStmt;
+  	//cout << "Creating Table Statement" << endl;
+  	sqlite3_prepare(db, createQuery.c_str(), createQuery.size(), &createStmt, NULL);
+  	//cout << "Stepping Table Statement" << endl;
+  	if (sqlite3_step(createStmt) != SQLITE_DONE) cout << "Didn't Create Table!" << endl;
+  	
+
+  	for(int i=1; i<indices; i++)
+  	{
+	  	//cout << "Creating Insert Statement" << endl;
+	  	sqlite3_stmt *insertStmt;
+	  	std::stringstream insertQuery;
+	  	string opening_tag = opening_tags[i];
+	  	string closing_tag = closing_tags[i];
+	  	int id = i;
+		insertQuery << "INSERT INTO TAGS_DATA (id, opening,closing)"
+	               " VALUES (" << id
+	            << ", '" << opening_tag
+	            << "', '" << closing_tag << "')";
+		sqlite3_prepare(db, insertQuery.str().c_str(), insertQuery.str().size(), &insertStmt, NULL);
+
+	  	//cout << "Stepping Insert Statement" << endl;
+	  	if (sqlite3_step(insertStmt) != SQLITE_DONE) cout << "Didn't Insert Item!" << endl;
+  	}
+
+    //cout << "Success!" << endl;
+}
+
+
+
 
 int main(int argc, char **argv)
 {	
+
 	ofstream attributes ("tag_attributes.txt");
 	if(!attributes.is_open())
 	{
@@ -331,7 +423,7 @@ int main(int argc, char **argv)
 
 	root_element = xmlDocGetRootElement(doc);
 
-	print_element_names(0,root_element,attributes,outfile, NULL);
+	print_element_names(root_element,outfile);
 	outfile<<endl;
 
 	xmlFreeDoc(doc);
@@ -340,8 +432,18 @@ int main(int argc, char **argv)
 
 	ifstream in("temp.txt");
 	std::string s((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-	merge_blocks(s);
-	// outfile << s;
+	string merged = merge_blocks(s);
+	//cout << merged << endl << endl;
+	string rds = remove_repeatition_superblanks(merged);
+	//cout << rds << endl << endl;
+	string final = add_non_inline_as_ids(attributes, rds);
+	cout << final << endl;
+	ofstream deformatted_output ("deformatter_output.txt");
+	deformatted_output << final;
+
+	//print_maps();
+	string filename = "tags_data.db";
+	put_in_database(filename);
 
 	return 0;
 }

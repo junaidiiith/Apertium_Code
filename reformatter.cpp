@@ -5,27 +5,65 @@
 #include <map>
 #include <fstream>
 #include <utility>
+#include <sqlite3.h>
+#include <stdlib.h>
+#include <sstream>
 using namespace std;
 
-map<int,string> att_hash;
+map<int,string> opening_tags;
+map<int, string> closing_tags;
 
+void make_maps(string filename)
+{	
+	sqlite3 *db;
+	sqlite3_open(filename.c_str(), & db);
+	string selectQuery = "SELECT * FROM TAGS_DATA;";
+    sqlite3_stmt *selectStmt;
+  
+  	if(sqlite3_prepare_v2(db, "select * from TAGS_DATA;", -1, &selectStmt, 0) != SQLITE_OK) cout << "Didn't Select Item!" << endl;
+  	else
+  	{
+    	int columns = sqlite3_column_count(selectStmt);
+     	int result = 0;
+     	while(true)
+     	{
+        	result = sqlite3_step(selectStmt);
+        	if(result == SQLITE_ROW)
+        	{
+           		
+          		stringstream s;
+          		s << sqlite3_column_text(selectStmt, 0);
+          		int id = stoi(s.str());
 
-string find_tag(string &str, int type)
-{
-	size_t position = str.find_first_of(",");
-	int l = str.length();
-	if(type == 2)
-		return str.substr(0,position);
-	else if(type == 1)
-		return str.substr(position+1,l-position-1);
+          		stringstream o_tag;
+          		string opening_tag;
+          		o_tag << sqlite3_column_text(selectStmt, 1);
+          		opening_tag = o_tag.str();
+					
+				stringstream c_tag;
+          		string closing_tag;
+          		c_tag << sqlite3_column_text(selectStmt, 2);
+          		closing_tag = c_tag.str();
+
+          		opening_tags[id] = opening_tag;
+          		closing_tags[id] = closing_tag;
+
+        	}
+        	else
+           		break;
+     	}
+    	sqlite3_finalize(selectStmt);
+    }	
 }
 
-string trim(string& str)
+bool is_blank(char ch)
 {
-    size_t first = str.find_first_not_of(' ');
-    size_t last = str.find_last_not_of(' ');
-    return str.substr(first, (last-first+1));
+	if(ch == ' ' || ch == '\n' || ch == '\t')
+		return true;
+	else
+		return false;
 }
+
 
 void empty_stack(stack<int> &mystack)
 {
@@ -37,28 +75,22 @@ void empty_stack(stack<int> &mystack)
 	}
 	while(!temp.empty())
 	{	
-		string tag_part = find_tag(att_hash[temp.top()],2);
-		cout << "</" << tag_part << ">";
+		//cout << "Closing tag with id ="<< temp.top() << endl;
+		cout << closing_tags[temp.top()];
 		temp.pop();
 	}
 }
 
+
 int main(int argc, char **argv)
 {	
-	if(argc != 2)
+
+	make_maps("tags_data.db");
+
+	if(argc!=2)
+	{	
+		cout << "Insufficient arguments\n";
 		return 1;
-	ifstream myfile ("tag_attributes.txt");
-
-	string line;
-	while(getline(myfile,line))
-	{
-		// cout << line << endl;
-		size_t found = line.find_first_of("=");
-		int l = line.length();
-		string str = line.substr(found+1,l-found-1);
-		int num = stoi(line);
-
-		att_hash[num] = str;
 	}
 	ifstream in(argv[1]);
 	std::string s((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
@@ -77,33 +109,24 @@ int main(int argc, char **argv)
 				while(s[j] != '}')
 				{	
 					string tag;
-
-					while(s[j]!='<')
-						cout << s[j++];
-					j++;
-					while(s[j] != '>')
-					{	
-						//cout << s[j];
-						tag = tag + s[j++];
-					}
-					j++;
-
+					while(s[j]!=',' && s[j]!='}')
+						tag += s[j++];
+					//cout << "Tag is" << tag << "this\n";
 					
-/*					int pos = 0;
-					int tlen = tag.length();
-					while(isalpha(tag[pos++]));
-					string att_tag = tag.substr(0,pos-1);
-					int ind = stoi(tag.substr(pos-1,tlen-pos-1));
-*/					int ind = stoi(tag);
-					
+					int ind = stoi(tag);
+
 					mystack.push(ind);
+					
+					if(s[j] == '}')
+						break;
+					else
+						j++;
 				}
 				
 				stack<int> temp = mystack;
 				while(!temp.empty())
 				{	
-					string tag_and_attributes = find_tag(att_hash[temp.top()], 1);
-					cout << "<" << tag_and_attributes << ">";
+					cout << opening_tags[temp.top()];
 					temp.pop();
 				}
 				i = j+2;
@@ -111,44 +134,20 @@ int main(int argc, char **argv)
 			else
 			{	
 				int j = i+1;
+				string tag;
+				bool blank_super = false;
 				while(s[j] != ']' && j < l)
 				{	
-					if(s[j] == '<')
-					{	
-						string tag;
-						j++;
-						bool closing_tag = false;
-						while(s[j] != '>')
-							tag = tag + s[j++];
-						j++;
-						int k = 0;
-						int ltag = tag.length();
-						while(k < ltag)
-						{
-							if(tag[k] == '/')
-							{
-								closing_tag = true;
-								break;
-							}
-							k++;
-						}
-						if(closing_tag)
-						{
-							cout << "<" << tag.substr(k,ltag) << ">";	
-						}
-						else
-						{	
-							/*int pos = 0;
-							while(isalpha(tag[pos++]));
-							string att_tag = tag.substr(0,pos-1);
-							int ind = stoi(tag.substr(pos-1,tag.length()-pos-1));*/
-							int ind = stoi(tag);
-							string tag_and_attributes = find_tag(att_hash[ind],1);
-							cout << "<" << tag_and_attributes << ">";
-						}
-					}
-					else
-						cout << s[j++];			
+					if(is_blank(s[j]))
+						blank_super = true;
+					tag += s[j++];
+				}
+				if(blank_super)
+					cout << tag;
+				else
+				{	
+					int ind = stoi(tag);
+					cout << opening_tags[ind];
 				}
 				i = j+1;
 			}
@@ -161,5 +160,7 @@ int main(int argc, char **argv)
 				cout << s[i++];
 		}
 	}
+
+	cout << endl;
 	return 0;
 }
