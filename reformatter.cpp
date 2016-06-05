@@ -85,13 +85,14 @@ void empty_stack(stack<int> &mystack)
 int main(int argc, char **argv)
 {	
 
-	make_maps("tags_data.db");
-
-	if(argc!=2)
+	if(argc!=3)
 	{	
 		cout << "Insufficient arguments\n";
 		return 1;
 	}
+
+	make_maps(argv[2]);
+
 	ifstream in(argv[1]);
 	std::string s((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 	
