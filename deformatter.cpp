@@ -179,7 +179,26 @@ void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& o
 				}
 				int k = 0;
 				print_stack(attributes,outfile);
-				while(k+1 < l)
+
+				string start_blank="";
+				while(is_blank(strng[k]) && k < l)
+					start_blank = strng[k++];
+
+				if(start_blank.length())
+					outfile << "[" << start_blank << "]";
+				int start_index = k;
+
+				k = l-1;
+				while(k>=0 && is_blank(strng[k]))
+					k--;
+				string end_blank ="";
+				int end_index = k;
+				k++;
+				while(k<l)
+					end_blank += strng[k++];
+
+				k = start_index;
+				while(k+1 <= end_index)
 				{	
 					
 					if(is_blank(strng[k]) && is_blank(strng[k+1]))
@@ -195,7 +214,7 @@ void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& o
 							else
 								break;
 						}
-						//outfile << "hello\n";
+				
 						outfile << "[" << buf << "]";
 						k = t;
 					}
@@ -205,8 +224,10 @@ void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& o
 						k++;
 					}
 				}
-				if(k < l)
+				if(k == end_index)
 					outfile << strng[k];
+				if(end_blank.length())
+					outfile << "[" << end_blank << "]";
 			}
 			else
 			{	
@@ -223,23 +244,26 @@ void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& o
 
 void merge_blocks(string s )
 {	
+	ofstream outputfile ("deformatter_output.txt");
 	int l = s.length();
 	int i = 0;
 	string ans="";
 	//cout << s << endl << endl;
+	//outputfile << s << endl << endl;
 	bool block;
 
 	while(i<l)
 	{	
 		if(i+2 > l)
 			break;
-		if(s[i]==']' && s[i+1]=='[' && s[i+2]!='{')
+		if((s[i]==']' && s[i+1]=='[' && s[i+2]!='{') && ((s[i]=='}' && s[i+1]==']' && s[i+2]!='[')))
 			i+=2;
 		ans += s[i];
 		i++;
 	}
 
 	//cout << ans << endl << endl;
+	//outputfile << ans << endl << endl;
 
 	i = 0;
 	string ans1 = "";
@@ -273,7 +297,7 @@ void merge_blocks(string s )
 		}
 	}
 
-	ofstream outputfile ("deformatter_output.txt");
+	
 	
 	cout << ans1 << endl;
 	outputfile << ans1 << endl;
