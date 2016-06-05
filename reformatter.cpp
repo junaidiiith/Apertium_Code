@@ -9,6 +9,17 @@ using namespace std;
 
 map<int,string> att_hash;
 
+
+string find_tag(string &str, int type)
+{
+	size_t position = str.find_first_of(",");
+	int l = str.length();
+	if(type == 2)
+		return str.substr(0,position);
+	else if(type == 1)
+		return str.substr(position+1,l-position-1);
+}
+
 string trim(string& str)
 {
     size_t first = str.find_first_not_of(' ');
@@ -16,17 +27,18 @@ string trim(string& str)
     return str.substr(first, (last-first+1));
 }
 
-void empty_stack(stack<pair< string, int>> &mystack)
+void empty_stack(stack<int> &mystack)
 {
-	stack<pair<string,int>> temp;
+	stack<int> temp;
 	while(!mystack.empty())
 	{
 		temp.push(mystack.top());
 		mystack.pop();
 	}
 	while(!temp.empty())
-	{
-		cout << "</" << temp.top().first << ">";
+	{	
+		string tag_part = find_tag(att_hash[temp.top()],2);
+		cout << "</" << tag_part << ">";
 		temp.pop();
 	}
 }
@@ -43,7 +55,7 @@ int main(int argc, char **argv)
 		// cout << line << endl;
 		size_t found = line.find_first_of("=");
 		int l = line.length();
-		string str = line.substr(found+1,l);
+		string str = line.substr(found+1,l-found-1);
 		int num = stoi(line);
 
 		att_hash[num] = str;
@@ -52,7 +64,7 @@ int main(int argc, char **argv)
 	std::string s((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 	
 	int l = s.length();
-	stack<pair<string,int>> mystack;
+	stack<int> mystack;
 	int i = 0;
 	while(i<l)
 	{	
@@ -77,20 +89,21 @@ int main(int argc, char **argv)
 					j++;
 
 					
-					int pos = 0;
+/*					int pos = 0;
 					int tlen = tag.length();
 					while(isalpha(tag[pos++]));
 					string att_tag = tag.substr(0,pos-1);
 					int ind = stoi(tag.substr(pos-1,tlen-pos-1));
-
+*/					int ind = stoi(tag);
 					
-					mystack.push(make_pair(trim(att_tag),ind));
+					mystack.push(ind);
 				}
 				
-				stack<pair<string,int>> temp = mystack;
+				stack<int> temp = mystack;
 				while(!temp.empty())
-				{
-					cout << "<" << temp.top().first << att_hash[temp.top().second] << ">";
+				{	
+					string tag_and_attributes = find_tag(att_hash[temp.top()], 1);
+					cout << "<" << tag_and_attributes << ">";
 					temp.pop();
 				}
 				i = j+2;
@@ -125,11 +138,13 @@ int main(int argc, char **argv)
 						}
 						else
 						{	
-							int pos = 0;
+							/*int pos = 0;
 							while(isalpha(tag[pos++]));
 							string att_tag = tag.substr(0,pos-1);
-							int ind = stoi(tag.substr(pos-1,tag.length()-pos-1));
-							cout << "<" << trim(att_tag) << att_hash[ind] << ">";
+							int ind = stoi(tag.substr(pos-1,tag.length()-pos-1));*/
+							int ind = stoi(tag);
+							string tag_and_attributes = find_tag(att_hash[ind],1);
+							cout << "<" << tag_and_attributes << ">";
 						}
 					}
 					else

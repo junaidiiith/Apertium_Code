@@ -76,9 +76,9 @@ void print_stack(ostream& attributes, ostream& outfile) {
 		xmlAttr *cur_attr = NULL;
     	xmlChar *attr;
     	xmlNode *cur_node = dump.top();
-		outfile << "<"<<cur_node->name <<  indices;
-		//outfile << "Node is " << cur_node->name;
-		attributes << indices << "=";
+		outfile << "<" << indices;
+		//outfile << "Node is " << cur_node->name << "," << cur_node->name;
+		attributes << indices << "=" << cur_node->name << "," << cur_node->name;
     	for (cur_attr = cur_node->properties; cur_attr; cur_attr = cur_attr->next) 
 		{
 
@@ -125,8 +125,8 @@ void print_element_names(int n, xmlNode * a_node, ostream& attributes,ostream& o
 				xmlAttr *cur_attr = NULL;
     			xmlChar *attr;
     			// printf("[<%s%d",cur_node->name,indices);
-    			outfile << "<" << cur_node->name << indices;
-    			attributes << indices << "=";
+    			outfile << "<" << indices;
+    			attributes << indices << "=" << cur_node->name << "," << cur_node->name;
 
     			for (cur_attr = cur_node->properties; cur_attr; cur_attr = cur_attr->next) 
     			{
