@@ -246,9 +246,10 @@ void merge_blocks(string s )
 {	
 	ofstream outputfile ("deformatter_output.txt");
 	int l = s.length();
-	int i = 0;
+	int i = 1;
 	string ans="";
-	//cout << s << endl << endl;
+	ans += s[0];
+	// cout << s << endl << endl;
 	//outputfile << s << endl << endl;
 	bool block;
 
@@ -256,13 +257,13 @@ void merge_blocks(string s )
 	{	
 		if(i+2 > l)
 			break;
-		if((s[i]==']' && s[i+1]=='[' && s[i+2]!='{') && ((s[i]=='}' && s[i+1]==']' && s[i+2]!='[')))
+		if((s[i]==']' && s[i+1]=='[' && s[i+2]!='{' && s[i-1]!='}'))
 			i+=2;
 		ans += s[i];
 		i++;
 	}
 
-	//cout << ans << endl << endl;
+	// cout << ans << endl << endl;
 	//outputfile << ans << endl << endl;
 
 	i = 0;
