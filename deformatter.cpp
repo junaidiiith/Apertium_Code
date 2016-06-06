@@ -108,6 +108,16 @@ void print_stack(ostream& outfile) {
 }
 
 void print_element_names(xmlNode * a_node, ostream& outfile) {
+
+	if(!a_node)
+	{
+		if(in_superblank)
+		{
+			in_superblank = false;
+			outfile << "]";
+		}
+	}
+
 	xmlNode *cur_node = NULL;
 
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
@@ -154,7 +164,7 @@ void print_element_names(xmlNode * a_node, ostream& outfile) {
 			}
 			else
 			{	
-				outfile << "[<\\/" << cur_node->name << ">]";
+				outfile << "[</" << cur_node->name << ">]";
 			}
 		}
 		else 
@@ -432,10 +442,11 @@ int main(int argc, char **argv)
 
 	ifstream in("temp.txt");
 	std::string s((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+	//cout << s << endl;
 	string merged = merge_blocks(s);
-	//cout << merged << endl << endl;
+	// cout << merged << endl << endl;
 	string rds = remove_repeatition_superblanks(merged);
-	//cout << rds << endl << endl;
+	// cout << rds << endl << endl;
 	string final = add_non_inline_as_ids(attributes, rds);
 	cout << final << endl;
 	ofstream deformatted_output ("deformatter_output.txt");
