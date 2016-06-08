@@ -71,9 +71,11 @@ bool is_blank(char ch)
 		return false;
 }
 
-void print_stack(ostream& outfile) {
+void print_stack(ostream& outfile, string &start_blank) {
 	if(!vec.size())
 		return;
+	if(start_blank.length())
+		outfile << "[" << start_blank << "]";
 	outfile<<"[{";
 	int comma = 0;
 	for (std::stack<xmlNode*> dump = vec; !dump.empty(); dump.pop())
@@ -188,14 +190,15 @@ void print_element_names(xmlNode * a_node, ostream& outfile) {
 					outfile << "]";
 				}
 				int k = 0;
-				print_stack(outfile);
+				//print_stack(outfile,start_blank);
 
 				string start_blank="";
 				while(is_blank(strng[k]) && k < l)
 					start_blank = strng[k++];
 
-				if(start_blank.length())
-					outfile << "[" << start_blank << "]";
+				// if(start_blank.length())
+				// 	outfile << "[" << start_blank << "]";
+				print_stack(outfile,start_blank);
 				int start_index = k;
 
 				k = l-1;
@@ -450,12 +453,15 @@ int main(int argc, char **argv)
 
 	ifstream in("temp.txt");
 	std::string s((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-	//cout << s << endl;
-	string merged = merge_blocks(s);
-	// cout << merged << endl << endl;
-	string rds = remove_repeatition_superblanks(merged);
+	// 	cout << s << endl;
+
+	string rds = remove_repeatition_superblanks(s);
 	// cout << rds << endl << endl;
-	string final = add_non_inline_as_ids(attributes, rds);
+
+	string merged = merge_blocks(rds);
+	// cout << merged << endl << endl;
+	
+	string final = add_non_inline_as_ids(attributes, merged);
 	cout << final << endl;
 	ofstream deformatted_output ("deformatter_output.txt");
 	deformatted_output << final;

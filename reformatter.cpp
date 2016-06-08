@@ -58,7 +58,7 @@ void make_maps(string filename)
 
 bool is_blank(char ch)
 {
-	if(ch == ' ' || ch == '\n' || ch == '\t')
+	if(ch == ' ' || ch == '\n' || ch == '\t' || ch == '\b' || ch == '\f')
 		return true;
 	else
 		return false;
@@ -136,15 +136,17 @@ int main(int argc, char **argv)
 			{	
 				int j = i+1;
 				string tag;
-				bool blank_super = false;
+				bool blank_super = true;
 				while(s[j] != ']' && j < l)
 				{	
-					if(is_blank(s[j]))
-						blank_super = true;
+					if(!is_blank(s[j]))
+						blank_super = false;
 					tag += s[j++];
 				}
 				if(blank_super)
+				{	
 					cout << tag;
+				}
 				else
 				{	
 					int ind = stoi(tag);
