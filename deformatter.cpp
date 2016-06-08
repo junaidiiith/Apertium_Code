@@ -229,13 +229,21 @@ void print_element_names(xmlNode * a_node, ostream& outfile) {
 						k = t;
 					}
 					else
-					{
-						outfile << strng[k];
+					{	
+						if(strng[k] == '[' || strng[k] == ']')
+							outfile << "\\" << strng[k];
+						else
+							outfile << strng[k];
 						k++;
 					}
 				}
 				if(k == end_index)
-					outfile << strng[k];
+				{	
+					if(strng[k] == '[' || strng[k] == ']')
+						outfile << "\\" << strng[k];
+					else
+						outfile << strng[k];
+				}
 				if(end_blank.length())
 					outfile << "[" << end_blank << "]";
 			}
@@ -266,7 +274,7 @@ string merge_blocks(string s)
 	{	
 		if(i+2 > l)
 			break;
-		if((s[i]==']' && s[i+1]=='[' && s[i+2]!='{' && s[i-1]!='}'))
+		if((s[i]==']' && s[i+1]=='[' && s[i+2]!='{' && s[i-1]!='}' && s[i-1]!= '\\'))
 			i+=2;
 		ans += s[i];
 		i++;
@@ -281,7 +289,7 @@ string remove_repeatition_superblanks(string s)
 	int l = s.length();
 	while(i < l)
 	{
-		if(s[i] == '[' && s[i+1] == ']')
+		if((i == 0 && s[i] == '[' && s[i+1] == ']') || (i > 0 && s[i-1] != '\\' && s[i] == '[' && s[i+1] == ']'))
 		{	
 			string buf = "[]";
 			int j = i+2;
@@ -318,7 +326,7 @@ string add_non_inline_as_ids(ostream& attributes, string s)
 	string ans="";
 	while(i+1 < l)
 	{
-		if(s[i]=='[' && s[i+1]!='{')
+		if(s[i]=='[' && s[i+1]!='{' && s[i-1] != '\\')
 		{
 			int j = i+1;
 			bool just_blank = true;
