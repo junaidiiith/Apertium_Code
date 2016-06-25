@@ -115,7 +115,7 @@ FSTProcessor::readFullBlock(FILE *input, wchar_t const delim1, wchar_t const del
 
   if(c != delim2)
   {
-    //wcout << "\nreadFullBlock error\n";
+    // wcout << "\nreadFullBlock error\n";
     streamError(); 
   }
   // wcout << "\nBlock output is " << result << "this\n";
@@ -127,7 +127,11 @@ FSTProcessor::readFullBlock(FILE *input, wchar_t const delim1, wchar_t const del
   if(result[1]==L'{')
   { 
     if(printed_word || !alnum_found)
+    {
       first_word = false;
+      if(!alnum_found)
+        previous_inline = ending_tag;
+    }
     else
       first_word = true;
     
@@ -663,7 +667,10 @@ FSTProcessor::printWord(wstring const &sf, wstring const &lf, FILE *output)
   printed_word = true;
   if(print_blank && !first_word)
   {
-    fputws_unlocked(inline_tags.c_str(),output);
+    if(!alnum_found)
+      fputws_unlocked(previous_inline.c_str(),output);
+    else
+      fputws_unlocked(inline_tags.c_str(),output);
     first_word = false;
   }
   if(ending_tag.length())
@@ -689,8 +696,11 @@ FSTProcessor::printWordBilingual(wstring const &sf, wstring const &lf, FILE *out
   // wcout << "\nprinting word\n";
   if(print_blank && !first_word)
   { 
+    if(!alnum_found)
+      fputws_unlocked(previous_inline.c_str(),output);
+    else
+      fputws_unlocked(inline_tags.c_str(),output);    
     first_word = false;
-    fputws_unlocked(inline_tags.c_str(),output);
   }
 
   if(ending_tag.length())
@@ -715,8 +725,11 @@ FSTProcessor::printUnknownWord(wstring const &sf, FILE *output)
     // wcout << "\nprinting word\n";
   if(print_blank && !first_word)
   {
+    if(!alnum_found)
+      fputws_unlocked(previous_inline.c_str(),output);
+    else
+      fputws_unlocked(inline_tags.c_str(),output);  
     first_word = false;
-    fputws_unlocked(inline_tags.c_str(),output);
   }
   if(ending_tag.length())
   {
