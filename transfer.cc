@@ -312,11 +312,13 @@ Transfer::evalString(xmlNode *element)
       case ti_clip_tl:
         if(checkIndex(element, ti.getPos(), lword))
         {
-          // pair<string, int> p;
-          return make_pair(word[ti.getPos()]->target(attr_items[ti.getContent()], ti.getCondition()), ti.getPos());
-          // wstring wstr (p.first.begin(), p.first.end());
-          // wcout << "ti_clip_tl is " << wstr << " and position is " << ti.getPos() << endl;
+          present = true;
+          pair<string, int> p;
+          p = make_pair(word[ti.getPos()]->target(attr_items[ti.getContent()], ti.getCondition()), ti.getPos());
+          wstring wstr (p.first.begin(), p.first.end());
+          wcout << "ti_clip_tl is " << wstr << " and position is " << ti.getPos() << endl;
           // return p;
+          return p;
         }
         break;
       
@@ -556,8 +558,9 @@ Transfer::evalString(xmlNode *element)
     if(myword != "")
     {
       string s="";
-      if(position >= 0 && position < number)
+      if(position >= 0 && position < number && present)
       { 
+        present = false;
         s = *wordbound[position];
       }
       return make_pair(s+"^"+myword+"$", position);
@@ -612,8 +615,9 @@ Transfer::evalString(xmlNode *element)
     if(value != "")
     {
       string s="";
-      if(position >= 0 && position < number)
+      if(position >= 0 && position < number && present)
       { 
+        present = false;
         // wcout << "No of blanks is " << number << endl;
         //         wstring wstr (*blank[position]->begin(), *blank[position]->end());
         // wcout << "blank in mlu in evalString is " << wstr << endl;
@@ -663,8 +667,9 @@ Transfer::processOut(xmlNode *localroot)
 	  }
 	  if(myword != "")
 	  {  
-      if(position >= 0 && position < number)
+      if(position >= 0 && position < number && present)
       { 
+        present = false;
         // wcout << "Number of blanks is " << number << endl;
         //         wstring wstr (*blank[position]->begin(), *blank[position]->end());
         // wcout << "blank in processOut in lu " << wstr << endl;
@@ -677,8 +682,9 @@ Transfer::processOut(xmlNode *localroot)
         }
         else if(!xmlStrcmp(i->name, (const xmlChar *) "mlu"))
         {
-          if(position >= 0 && position < number)
+          if(position >= 0 && position < number && present)
           { 
+            present = false;
             // wcout << "No of blanks in mlu is " << number << endl;
             //         wstring wstr (*blank[position]->begin(), *blank[position]->end());
             // wcout << "blank in processOut in mlu is " << wstr << endl;
@@ -828,8 +834,9 @@ Transfer::processChunk(xmlNode *localroot)
         }
         if(myword != "")
         { 
-          if(position >= 0 && position < number)
+          if(position >= 0 && position < number && present)
           {
+            present = false;
             // wcout << "No of blanks is " << number << endl;
             //         wstring wstr (*blank[position]->begin(), *blank[position]->end());
             // wcout << "blank in chunk in lu is " << wstr << endl;
@@ -876,8 +883,9 @@ Transfer::processChunk(xmlNode *localroot)
         }
         if(myword != "")
         { 
-          if(position >= 0 && position < number)
+          if(position >= 0 && position < number && present)
           {
+            present = false;
             // wcout << "NO of blanks in mlu is this " << number << endl;
             //         wstring wstr (*blank[position]->begin(), *blank[position]->end());
             // wcout << "blank in chunk in mlu is " << wstr << endl;
@@ -2151,6 +2159,7 @@ Transfer::applyRule()
 {
   unsigned int limit = tmpword.size();
   number = limit;
+  present = false;
   // wcerr << L"applyRule: " << tmpword.size() << endl;
   
   for(unsigned int i = 0; i != limit; i++)
@@ -2158,27 +2167,27 @@ Transfer::applyRule()
     if(i == 0)
     {
       word = new TransferWord *[limit];
+      
       wordbound = new string *[limit];
+      wordbound[0] = new string(UtfConverter::toUtf8(last_wordblank));
+
       lword = limit;
       if(limit != 1)
       {
         blank = new string *[limit - 1];
         lblank = limit - 1;
-        wordbound[0] = new string(UtfConverter::toUtf8(last_wordblank));
         // wcout << "Last wordlank is " << last_wordblank << endl;
       }
       else
       {
         // wcout << "last_wordblank in case of " << last_wordblank << endl;
-        wordbound[0] = new string(UtfConverter::toUtf8(last_wordblank));
         blank = NULL;
         lblank = 0;
       }
     }
     else
     {
-      // blank[i-1] = new string(UtfConverter::toUtf8(*tmpblank[i-1]));
-      // wcout << "blank is " << *tmpblank[i-1] << endl;
+
       string *temp = new string(UtfConverter::toUtf8(*tmpblank[i-1]));
       string s (temp->begin(), temp->end());
       int l = s.length();
