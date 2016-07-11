@@ -312,11 +312,11 @@ Transfer::evalString(xmlNode *element)
       case ti_clip_tl:
         if(checkIndex(element, ti.getPos(), lword))
         {
-          present = true;
+          // present = true;
           pair<string, int> p;
           p = make_pair(word[ti.getPos()]->target(attr_items[ti.getContent()], ti.getCondition()), ti.getPos());
           wstring wstr (p.first.begin(), p.first.end());
-          wcout << "ti_clip_tl is " << wstr << " and position is " << ti.getPos() << endl;
+          // wcout << "ti_clip_tl is " << wstr << " and position is " << ti.getPos() << endl;
           // return p;
           return p;
         }
@@ -558,9 +558,11 @@ Transfer::evalString(xmlNode *element)
     if(myword != "")
     {
       string s="";
-      if(position >= 0 && position < number && present)
+      // wcout << "\npresent value is " << present << endl;
+      if(position >= 0 && position < number )
       { 
-        present = false;
+        // wcout << "In\n";
+        // present = false;
         s = *wordbound[position];
       }
       return make_pair(s+"^"+myword+"$", position);
@@ -615,9 +617,12 @@ Transfer::evalString(xmlNode *element)
     if(value != "")
     {
       string s="";
-      if(position >= 0 && position < number && present)
+      // wcout << "\npresent value is " << present << endl;
+
+      if(position >= 0 && position < number )
       { 
-        present = false;
+        // wcout << "In\n";
+        // present = false;
         // wcout << "No of blanks is " << number << endl;
         //         wstring wstr (*blank[position]->begin(), *blank[position]->end());
         // wcout << "blank in mlu in evalString is " << wstr << endl;
@@ -667,9 +672,11 @@ Transfer::processOut(xmlNode *localroot)
 	  }
 	  if(myword != "")
 	  {  
-      if(position >= 0 && position < number && present)
+      // wcout << "\npresent value is " << present << endl;
+      if(position >= 0 && position < number )
       { 
-        present = false;
+        // wcout << "huiej\n";
+        // present = false;
         // wcout << "Number of blanks is " << number << endl;
         //         wstring wstr (*blank[position]->begin(), *blank[position]->end());
         // wcout << "blank in processOut in lu " << wstr << endl;
@@ -682,9 +689,11 @@ Transfer::processOut(xmlNode *localroot)
         }
         else if(!xmlStrcmp(i->name, (const xmlChar *) "mlu"))
         {
-          if(position >= 0 && position < number && present)
+          // wcout << "\npresent value is " << present << endl;
+          if(position >= 0 && position < number )
           { 
-            present = false;
+            // wcout << "sdbksdc\n";
+            // present = false;
             // wcout << "No of blanks in mlu is " << number << endl;
             //         wstring wstr (*blank[position]->begin(), *blank[position]->end());
             // wcout << "blank in processOut in mlu is " << wstr << endl;
@@ -834,9 +843,11 @@ Transfer::processChunk(xmlNode *localroot)
         }
         if(myword != "")
         { 
-          if(position >= 0 && position < number && present)
+          // wcout << "\npresent value is " << present << endl;
+          if(position >= 0 && position < number )
           {
-            present = false;
+            // wcout << "ksjcnjds\n";
+            // present = false;
             // wcout << "No of blanks is " << number << endl;
             //         wstring wstr (*blank[position]->begin(), *blank[position]->end());
             // wcout << "blank in chunk in lu is " << wstr << endl;
@@ -883,9 +894,11 @@ Transfer::processChunk(xmlNode *localroot)
         }
         if(myword != "")
         { 
-          if(position >= 0 && position < number && present)
+          // wcout << "\npresent value is " << present << endl;
+          if(position >= 0 && position < number )
           {
-            present = false;
+            // wcout << "jsddncjks\n";
+            // present = false;
             // wcout << "NO of blanks in mlu is this " << number << endl;
             //         wstring wstr (*blank[position]->begin(), *blank[position]->end());
             // wcout << "blank in chunk in mlu is " << wstr << endl;
@@ -1961,6 +1974,30 @@ Transfer::add_last_wordblank(wstring const &str)
   return wstr;
 }
 
+wstring
+Transfer::phrasebound(wstring const &str)
+{
+  string s (str.begin(), str.end());
+
+  int l = s.length();
+  int j = 0;
+  string sb = "";
+
+  while( j < l+1)
+  {
+    if(s[j] == '[' && s[j+1] == '{')
+    {
+      j += 2;
+      while(s[j]!=']')
+        j++;
+      j++;
+    }
+    sb += s[j++];
+  }
+  wstring wstr(sb.begin(), sb.end());
+  return wstr;
+}
+
 void
 Transfer::transfer(FILE *in, FILE *out)
 {
@@ -2062,6 +2099,7 @@ Transfer::transfer(FILE *in, FILE *out)
 	  {
 	    if(defaultAttrs == lu)
 	    {
+        fputws_unlocked(last_wordblank.c_str(),output);
 	      fputwc_unlocked(L'^', output);
 	      fputws_unlocked(tr.first.c_str(), output);
 	      fputwc_unlocked(L'$', output);
@@ -2069,12 +2107,16 @@ Transfer::transfer(FILE *in, FILE *out)
             else
             {
               if(tr.first[0] == '*')
-              {
-                fputws_unlocked(L"^unknown<unknown>{^", output);
+              { 
+                fputws_unlocked(L"^unknown<unknown>{", output);
+                fputws_unlocked(last_wordblank.c_str(), output);
+                fputws_unlocked(L"^", output);
               }
               else
               {                
-	        fputws_unlocked(L"^default<default>{^", output);
+	        fputws_unlocked(L"^default<default>{", output);
+          fputws_unlocked(last_wordblank.c_str(), output);
+          fputws_unlocked(L"^", output);
               }	        
 	      fputws_unlocked(tr.first.c_str(), output);
 	      fputws_unlocked(L"$}$", output);
@@ -2088,7 +2130,8 @@ Transfer::transfer(FILE *in, FILE *out)
 	}
 	else if(tmpblank.size() != 0)
 	{
-	  fputws_unlocked(tmpblank[0]->c_str(), output);
+    wstring temp = phrasebound(*tmpblank[0]);
+	  fputws_unlocked(temp.c_str(), output);
 	  tmpblank.clear();
 	  last = input_buffer.getPos();
 	  ms.init(me->getInitial());
@@ -2159,7 +2202,7 @@ Transfer::applyRule()
 {
   unsigned int limit = tmpword.size();
   number = limit;
-  present = false;
+  // present = false;
   // wcerr << L"applyRule: " << tmpword.size() << endl;
   
   for(unsigned int i = 0; i != limit; i++)
@@ -2170,13 +2213,13 @@ Transfer::applyRule()
       
       wordbound = new string *[limit];
       wordbound[0] = new string(UtfConverter::toUtf8(last_wordblank));
+      // wcout << "Last wordlank is " << last_wordblank << endl;
 
       lword = limit;
       if(limit != 1)
       {
         blank = new string *[limit - 1];
         lblank = limit - 1;
-        // wcout << "Last wordlank is " << last_wordblank << endl;
       }
       else
       {
@@ -2187,7 +2230,6 @@ Transfer::applyRule()
     }
     else
     {
-
       string *temp = new string(UtfConverter::toUtf8(*tmpblank[i-1]));
       string s (temp->begin(), temp->end());
       int l = s.length();
