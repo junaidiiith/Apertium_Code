@@ -1,8 +1,0 @@
-[<div1>
-  <p2>
-    ][{<i3>}]hello brother[
-    ][{<u4>}]how[ 
-    ][{<b5><u6>}]are you[
-    ][{<em7><u8>}]doing?[
-  <\/p>
-<\/div>]
