@@ -290,6 +290,52 @@ Transfer::checkIndex(xmlNode *element, int index, int limit)
 }
 
 
+Transfer::best_blank_pos
+Transfer::wordBlankPos(xmlNode *element, best_blank_pos best_so_far)
+{ 
+    wcerr << "In wordBlankPos\n";
+  if (best_so_far.second == "lu" ||
+       best_so_far.second == "whole" ||
+       best_so_far.second == "lem" ||
+       best_so_far.second == "lemh" ||
+       best_so_far.second == "lemq") {
+    return best_so_far;
+  }
+  map<xmlNode *, TransferInstr>::iterator it;
+  it = evalStringCache.find(element);
+  if(it == evalStringCache.end())
+  {
+    string _ = evalString(element).first;
+    it = evalStringCache.find(element);
+  }
+
+  if(it != evalStringCache.end())
+  {
+    TransferInstr &ti = it->second;
+    switch(ti.getType())
+    {
+      case ti_clip_sl:
+      case ti_clip_tl:
+      case ti_linkto_sl:
+      case ti_linkto_tl:
+        if(checkIndex(element, ti.getPos(), lword))
+        {
+          return std::make_pair<int, string>(ti.getPos(), ti.getContent());
+        }
+        break;
+
+      default:
+        return std::make_pair<int, string>(-1, NULL);
+    }
+  }
+  else
+  {
+    wcerr << L"Warning: evalString didn't seem to fill the cache in " << UtfConverter::fromUtf8((char *) doc->URL) <<L": line " << element->line << endl;
+  }
+  return std::make_pair<int, string>(-1, NULL);
+}
+
+
 pair<string,int> 
 Transfer::evalString(xmlNode *element)
 {
@@ -561,6 +607,7 @@ Transfer::evalString(xmlNode *element)
   else if(!xmlStrcmp(element->name, (const xmlChar *) "lu"))
   {
     string myword;
+    // best_blank_pos blankfrom;
     for(xmlNode *i = element->children; i != NULL; i = i->next)
     {
        if(i->type == XML_ELEMENT_NODE)
@@ -569,27 +616,18 @@ Transfer::evalString(xmlNode *element)
          p = evalString(i);
          myword.append(p.first);
          position = p.second;
+         // blankfrom = wordBlankPos(i, blankfrom);
        }
     }
     
     if(myword != "")
     {
+      // int num = blankfrom.first;
+      // wcerr << "blankfrom.first is " << num << "and position is " << position << endl;
       string s="";
-      // int l = myword.length();
       if(position >= 0 && position < number )
-      { 
-        // string temp;
-        // int j = 0;
-        // while(j < l && myword[j] !='<')
-        //   temp += myword[j++];
-        // // wstring ws (temp.begin(), temp.end());
-        // // wcout << "temp word is" << ws << endl;
-        // if(present_words.find(temp) != present_words.end())
-        // {
           s = *wordbound[position];
-        // }
-      }
-      return make_pair(/*s+*/"^"+myword+"$", position);
+      return make_pair(s+"^"+myword+"$", position);
     }
     else
     {
@@ -641,23 +679,7 @@ Transfer::evalString(xmlNode *element)
     if(value != "")
     {
       string s="";
-      string e="";
-      // wcout << "\npresent value is " << present << endl;
-      // int l = value.length();
-      if(position >= 0 && position < number )
-      { 
-        // string temp;
-        // int j = 0;
-        // while(j < l && value[j] !='<')
-        //   temp += value[j++];
-        // // wstring ws (temp.begin(), temp.end());
-        // // wcout << "temp word is" << ws << endl;
-        // if(present_words.find(temp) != present_words.end())
-        // {
-          s = *wordbound[position];
-        // }
-      }
-      return make_pair("^"+value+"$", position);
+      make_pair("^"+value+"$", position);
     }
     else
     {
@@ -689,6 +711,7 @@ Transfer::processOut(xmlNode *localroot)
         if(!xmlStrcmp(i->name, (const xmlChar *) "lu"))
         {
   	  string myword;
+      // best_blank_pos blankfrom;
 	  for(xmlNode *j = i->children; j != NULL; j = j->next)
 	  {
 	    if(j->type == XML_ELEMENT_NODE)
@@ -697,32 +720,21 @@ Transfer::processOut(xmlNode *localroot)
         p = evalString(j);
 	      myword.append(p.first);
         position = p.second;
+        // blankfrom = wordBlankPos(j, blankfrom);
             }
 	  }
 	  if(myword != "")
 	  {  
-      // wcout << "\npresent value is " << present << endl;
-      // int l = myword.length();
       string e="";
+      // int num = blankfrom.first;
+      // wcerr << "blankfrom.first is " << num << "and position is " << position << endl;
       if(position >= 0 && position < number )
       { 
-        // string temp;
-        // int j = 0;
-        // while(j < l && myword[j] !='<')
-        //   temp += myword[j++];
-        // // wstring ws (temp.begin(), temp.end());
-        // // wcout << "temp word is" << ws << endl;
-        // if(present_words.find(temp) != present_words.end())
-        // {
           fputws_unlocked(UtfConverter::fromUtf8(*wordbound[position]).c_str(), output);
-          // if(position < number-1 )
-          //   e = *emptyblanks[position];
-        // }
   	   }
         fputwc_unlocked(L'^', output);
    	    fputws_unlocked(UtfConverter::fromUtf8(myword).c_str(), output);
 	    fputwc_unlocked(L'$', output);
-      // fputws_unlocked(UtfConverter::fromUtf8(e).c_str(),output);
           }
         }
         else if(!xmlStrcmp(i->name, (const xmlChar *) "mlu"))
@@ -763,26 +775,9 @@ Transfer::processOut(xmlNode *localroot)
 	    }
 	  }
     // string e="";
-    if(position >= 0 && position < number )
-    { 
-      // string temp;
-      // int l = value.length();
-      // int j = 0;
-      // while(j < l && value[j] !='<')
-      //   temp += value[j++];
-      // wstring ws (temp.begin(), temp.end());
-      // wcout << "temp word is" << ws << endl;
-      // if(present_words.find(temp) != present_words.end())
-      // {
-        // if(position < number-1 )
-          // e = *emptyblanks[position];
-        fputws_unlocked(UtfConverter::fromUtf8(*wordbound[position]).c_str(), output);
-      // }
-    }
     fputwc_unlocked(L'^',output);
     fputws_unlocked(UtfConverter::fromUtf8(value).c_str(), output);
 	  fputwc_unlocked(L'$', output);
-    // fputws_unlocked(UtfConverter::fromUtf8(e).c_str(),output);
         }
         else // 'b'
         { 
@@ -882,6 +877,7 @@ Transfer::processChunk(xmlNode *localroot)
       else if(!xmlStrcmp(i->name, (const xmlChar *) "lu"))
       {
         string myword;
+        // best_blank_pos blankfrom;
         for(xmlNode *j = i->children; j != NULL; j = j->next)
         {
           if(j->type == XML_ELEMENT_NODE)
@@ -890,31 +886,21 @@ Transfer::processChunk(xmlNode *localroot)
             p = evalString(j);
             myword.append(p.first);
             position = p.second;
+            // blankfrom = wordBlankPos(j, blankfrom);
           }
         }
         string e="";
         if(myword != "")
         { 
+          // int num = blankfrom.first;
+          // wcerr << "blankfrom.first is " << num << "and position is " << position << endl;
           if(position >= 0 && position < number )
           {
-            // string temp;
-            // int l = myword.length();
-            // int j = 0;
-            // while(j < l && myword[j] !='<')
-            //   temp += myword[j++];
-            // // wstring ws (temp.begin(), temp.end());
-            // // wcout << "temp word is" << ws << endl;
-            // if(present_words.find(temp) != present_words.end())
-            // {
-            //   if(position < number-1 )
-            //     e = *emptyblanks[position];
               result.append(*wordbound[position]);
-            // }
           }
           result.append("^");
           result.append(myword);
           result.append("$");
-          // result.append(e);
         }
       }
       else if(!xmlStrcmp(i->name, (const xmlChar *) "mlu"))
@@ -951,28 +937,11 @@ Transfer::processChunk(xmlNode *localroot)
           }
           myword.append(mylocalword);
         }
-        // string e="";
         if(myword != "")
         { 
-          if(position >= 0 && position < number )
-          {
-            // string temp;
-            // int l = myword.length();
-            // int j = 0;
-            // while(j < l && myword[j] !='<')
-            //   temp += myword[j++];
-            // // wstring ws (temp.begin(), temp.end());
-            // // wcout << "temp word is" << ws << endl;
-            // if(present_words.find(temp) != present_words.end())
-            // {
-            //   if(position < number-1 )
-            //     e = *emptyblanks[position];
-              result.append(*wordbound[position]);
-          }
           result.append("^");
           result.append(myword);
           result.append("$");
-          // result.append(e);
         }
       }
       else // 'b'

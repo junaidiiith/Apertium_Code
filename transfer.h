@@ -132,6 +132,8 @@ private:
   string processTags(xmlNode *localroot);
   wstring firstTranslationOfWord(wstring const &word) const;
   void applyDefaultRule(TransferToken &token);
+  typedef std::pair<int, string> best_blank_pos;
+  best_blank_pos wordBlankPos(xmlNode *localroot, best_blank_pos best_so_far);
 
 
   bool beginsWith(string const &str1, string const &str2) const;
