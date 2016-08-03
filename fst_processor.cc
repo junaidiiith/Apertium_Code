@@ -113,53 +113,31 @@ FSTProcessor::readFullBlock(FILE *input, wchar_t const delim1, wchar_t const del
     }
   }
 
-  // wcout << "result is" << result << endl;
-  // wcout << "Position of file indicator is" << ftell(input) << endl;
+  wcout << "result is" << result << endl;
   if(c != delim2)
   {
-    // wcout << "\nreadFullBlock error\n";
     streamError(); 
   }
-  // wcout << "\nBlock output is " << result << "this\n";
-  // if(alnum_found)
-  //   wcout << "true\n";
-  // else
-  //   wcout << "false\n";
-
   if(result[1]==L'{')
   { 
-  //   if(printed_word || !alnum_found)
-  //   {
-  //     first_word = false;
-  //     if(!alnum_found)
-  //       previous_inline = ending_tag;
-  //   }
-  //   else
-  //     first_word = true;
-    
-  //   print_blank = true;
-  //   ending_tag = L"";
-  //   inline_tags = result;
-  //   result = L"";
-  //   alnum_found = false;
-  // }
-  // else
-  // { 
-  //   printed_word = false;
-  //   print_blank = false;
-  //   ending_tag = inline_tags;
-  //   inline_tags = L"";
-  //   alnum_found = false;
-
     if(first_time)
     {
-      i_tag1 = result;
-      first_time = false;
+      if(!alnum_found)
+      {
+        i_tag1 = result;
+        first_time = false;
+      }
+      else
+      {
+        i_tag1 = L"";
+        i_tag2 = result;
+        first_time = false;
+        n_time = 1;
+      }
     }
     else
     {
       n_time += 1;
-      // wcout << "alnum_found is " << alnum_found << endl;
       if(!alnum_found)
       {
         i_tag1 = result;
