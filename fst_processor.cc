@@ -113,7 +113,7 @@ FSTProcessor::readFullBlock(FILE *input, wchar_t const delim1, wchar_t const del
     }
   }
 
-  wcout << "result is" << result << endl;
+  // wcout << "result is" << result << endl;
   if(c != delim2)
   {
     streamError(); 
@@ -125,19 +125,21 @@ FSTProcessor::readFullBlock(FILE *input, wchar_t const delim1, wchar_t const del
       if(!alnum_found)
       {
         i_tag1 = result;
-        first_time = false;
+        i_tag2 = result;
       }
       else
       {
-        i_tag1 = L"";
+        // i_tag1 = L"";
         i_tag2 = result;
-        first_time = false;
-        n_time = 1;
       }
+      n_time = 1;
+      first_time = false;
+      // wcout << "itag1 = first_time is" << i_tag1 << endl;
     }
     else
     {
       n_time += 1;
+      // wcout << "itag1 = " << i_tag1 << endl;
       if(!alnum_found)
       {
         i_tag1 = result;
@@ -147,9 +149,13 @@ FSTProcessor::readFullBlock(FILE *input, wchar_t const delim1, wchar_t const del
     result = L"";
   }
   else
-  {
+  { 
+    // wcout << "itag is" << i_tag1 << "n_time is" << n_time << endl;
+    if(!alnum_found && n_time == 0)
+      i_tag1 = L"";
     i_tag2 = L"";
     first_time = true;
+    alnum_found = false;
   }
 
   return result;
@@ -684,6 +690,11 @@ FSTProcessor::printWord(wstring const &sf, wstring const &lf, FILE *output)
   //   printed_word = false;
   //   //was_last_word = true;
   // }
+
+  if(alnum_found && first_time)
+  {
+    i_tag1 = L"";
+  }
 
   if(n_time == 1 || n_time == 2)
   {
