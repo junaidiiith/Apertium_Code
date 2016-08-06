@@ -113,7 +113,7 @@ FSTProcessor::readFullBlock(FILE *input, wchar_t const delim1, wchar_t const del
     }
   }
 
-  wcout << "result is" << result << endl;
+  // wcout << "result is" << result << endl;
   if(c != delim2)
   {
     streamError(); 
