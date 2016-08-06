@@ -113,7 +113,7 @@ FSTProcessor::readFullBlock(FILE *input, wchar_t const delim1, wchar_t const del
     }
   }
 
-  // wcout << "result is" << result << endl;
+  wcout << "result is" << result << endl;
   if(c != delim2)
   {
     streamError(); 
@@ -150,14 +150,13 @@ FSTProcessor::readFullBlock(FILE *input, wchar_t const delim1, wchar_t const del
   }
   else
   { 
-    // wcout << "itag is" << i_tag1 << "n_time is" << n_time << endl;
-    if((!alnum_found && n_time == 0) || (alnum_found && first_time)) 
+    // wcout << "itag is" << i_tag1 << "first_time is" << first_time << " alnum_found is "<< alnum_found << endl;
+    if((!alnum_found && n_time == 0) || first_time) 
       i_tag1 = L"";
     i_tag2 = L"";
     first_time = true;
-    alnum_found = false;
   }
-
+  alnum_found = false;
   return result;
 }
 
@@ -691,10 +690,20 @@ FSTProcessor::printWord(wstring const &sf, wstring const &lf, FILE *output)
   //   //was_last_word = true;
   // }
 
-  if(alnum_found && first_time)
-  {
-    i_tag1 = L"";
-  }
+ if(n_time == 1 || n_time == 0)
+ { 
+   if(first_time)
+   {
+    if(alnum_found)
+      i_tag1 = L"";
+   }
+   else
+   {
+    if(!alnum_found)
+      i_tag1 = L"";
+   }
+ }  
+
 
   if(n_time == 1 || n_time == 2)
   {
@@ -737,12 +746,26 @@ FSTProcessor::printWordBilingual(wstring const &sf, wstring const &lf, FILE *out
   //   //was_last_word = true;
   // }
 
+ if(n_time == 1 || n_time == 0)
+ { 
+   if(first_time)
+   {
+    if(alnum_found)
+      i_tag1 = L"";
+   }
+   else
+   {
+    if(!alnum_found)
+      i_tag1 = L"";
+   }
+ }
+
   if(n_time == 1 || n_time == 2)
   {
     fputws_unlocked(i_tag1.c_str(),output);
     i_tag1 = i_tag2;
   }
-  else if(n_time == 1)
+  else if(n_time == 0)
   {
     fputws_unlocked(i_tag1.c_str(), output);
   }
@@ -776,13 +799,26 @@ FSTProcessor::printUnknownWord(wstring const &sf, FILE *output)
   //   printed_word = false;
   //   //was_last_word = true;
   // }
- 
+  
+ if(n_time == 1 || n_time == 0)
+ { 
+   if(first_time)
+   {
+    if(alnum_found)
+      i_tag1 = L"";
+   }
+   else
+   {
+    if(!alnum_found)
+      i_tag1 = L"";
+   }
+ }  
   if(n_time == 1 || n_time == 2)
   {
     fputws_unlocked(i_tag1.c_str(),output);
     i_tag1 = i_tag2;
   }
-  else if(n_time == 1)
+  else if(n_time == 0)
   {
     fputws_unlocked(i_tag1.c_str(), output);
   }
