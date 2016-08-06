@@ -120,43 +120,30 @@ FSTProcessor::readFullBlock(FILE *input, wchar_t const delim1, wchar_t const del
   }
   if(result[1]==L'{')
   { 
-    if(first_time)
+    n_time += 1;
+    if(n_time > 1)
     {
-      if(!alnum_found)
-      {
-        i_tag1 = result;
-        i_tag2 = result;
-      }
-      else
-      {
-        // i_tag1 = L"";
-        i_tag2 = result;
-      }
-      n_time = 1;
-      first_time = false;
-      // wcout << "itag1 = first_time is" << i_tag1 << endl;
+      i_tag2 = result;
     }
     else
     {
-      n_time += 1;
-      // wcout << "itag1 = " << i_tag1 << endl;
-      if(!alnum_found)
+      if(alnum_found)
       {
-        i_tag1 = result;
+        i_tag1 = L"";
+        i_tag2 = result;
       }
-     i_tag2 = result;
+      else
+        i_tag1 = result;
     }
+
     result = L"";
+    first_time = false;
+
   }
   else
   { 
-    // wcout << "itag is" << i_tag1 << "first_time is" << first_time << " alnum_found is "<< alnum_found << endl;
-    if((!alnum_found && n_time == 0) || first_time) 
-      i_tag1 = L"";
-    i_tag2 = L"";
     first_time = true;
   }
-  alnum_found = false;
   return result;
 }
 
@@ -213,6 +200,11 @@ FSTProcessor::readAnalysis(FILE *input)
   if(isalnum((char)val))
   {
     alnum_found = true;
+    if(first_time)
+    {
+      i_tag2 = L"";
+      i_tag1 = L"";
+    }
     // wcout << "character is " << val <<"this\n";
   }
   input_buffer.add(val);
@@ -670,158 +662,39 @@ FSTProcessor::writeEscapedWithTags(wstring const &str, FILE *output)
 void
 FSTProcessor::printWord(wstring const &sf, wstring const &lf, FILE *output)
 { 
-  //   // wcout << "\nprinting word\n";
-  // printed_word = true;
-  // wcout << "print_blank is " << print_blank << " and first_word is " << first_word << endl;
-  // if(print_blank && !first_word)
-  // {
-  //   if(!alnum_found)
-  //     fputws_unlocked(previous_inline.c_str(),output);
-  //   else
-  //     fputws_unlocked(inline_tags.c_str(),output);
-  //   first_word = false;
-  // }
-  // if(ending_tag.length())
-  // {
-  //   fputws_unlocked(ending_tag.c_str(),output);
-  //   ending_tag = L"";
-  //      // wcout << "\nending\n";
-  //   printed_word = false;
-  //   //was_last_word = true;
-  // }
+  fputws_unlocked(i_tag1.c_str(),output);
+  i_tag1 = i_tag2;
 
- if(n_time == 1 || n_time == 0)
- { 
-   if(first_time)
-   {
-    if(alnum_found)
-      i_tag1 = L"";
-   }
-   else
-   {
-    if(!alnum_found)
-      i_tag1 = L"";
-   }
- }  
-
-
-  if(n_time == 1 || n_time == 2)
-  {
-    fputws_unlocked(i_tag1.c_str(),output);
-    i_tag1 = i_tag2;
-  }
-  else if(n_time == 0)
-  {
-    fputws_unlocked(i_tag1.c_str(), output);
-  }
   n_time = 0;
   fputwc_unlocked(L'^', output);
   writeEscaped(sf, output);
   fputws_unlocked(lf.c_str(), output);
   fputwc_unlocked(L'$', output);
   alnum_found = false;
+  // printed_word = false;
   // first_word = false;
 }
 
 void
 FSTProcessor::printWordBilingual(wstring const &sf, wstring const &lf, FILE *output)
 {  
-  // printed_word = true;
-  // // wcout << "\nprinting word\n";
-  // if(print_blank && !first_word)
-  // { 
-  //   if(!alnum_found)
-  //     fputws_unlocked(previous_inline.c_str(),output);
-  //   else
-  //     fputws_unlocked(inline_tags.c_str(),output);    
-  //   first_word = false;
-  // }
-
-  // if(ending_tag.length())
-  // {
-  //   fputws_unlocked(ending_tag.c_str(),output);
-  //   ending_tag = L"";
-  //      // wcout << "\nending\n";
-  //   printed_word = false;
-  //   //was_last_word = true;
-  // }
-
- if(n_time == 1 || n_time == 0)
- { 
-   if(first_time)
-   {
-    if(alnum_found)
-      i_tag1 = L"";
-   }
-   else
-   {
-    if(!alnum_found)
-      i_tag1 = L"";
-   }
- }
-
-  if(n_time == 1 || n_time == 2)
-  {
-    fputws_unlocked(i_tag1.c_str(),output);
+  fputws_unlocked(i_tag1.c_str(),output);
     i_tag1 = i_tag2;
-  }
-  else if(n_time == 0)
-  {
-    fputws_unlocked(i_tag1.c_str(), output);
-  }
   n_time = 0;
 
   fputwc_unlocked(L'^', output);
   fputws_unlocked(sf.c_str(), output);
   fputws_unlocked(lf.c_str(), output);
   fputwc_unlocked(L'$', output);
-  // first_word = false;
+  alnum_found = false;
 }
 
 void
 FSTProcessor::printUnknownWord(wstring const &sf, FILE *output)
 { 
-  // printed_word = true;
-  //   // wcout << "\nprinting word\n";
-  // if(print_blank && !first_word)
-  // {
-  //   if(!alnum_found)
-  //     fputws_unlocked(previous_inline.c_str(),output);
-  //   else
-  //     fputws_unlocked(inline_tags.c_str(),output);  
-  //   first_word = false;
-  // }
-  // if(ending_tag.length())
-  // {
-  //   fputws_unlocked(ending_tag.c_str(),output);
-  //   ending_tag = L"";
-  //   // wcout << "\nending\n";
-  //   printed_word = false;
-  //   //was_last_word = true;
-  // }
-  
- if(n_time == 1 || n_time == 0)
- { 
-   if(first_time)
-   {
-    if(alnum_found)
-      i_tag1 = L"";
-   }
-   else
-   {
-    if(!alnum_found)
-      i_tag1 = L"";
-   }
- }  
-  if(n_time == 1 || n_time == 2)
-  {
-    fputws_unlocked(i_tag1.c_str(),output);
+  fputws_unlocked(i_tag1.c_str(),output);
+
     i_tag1 = i_tag2;
-  }
-  else if(n_time == 0)
-  {
-    fputws_unlocked(i_tag1.c_str(), output);
-  }
   n_time = 0; 
   fputwc_unlocked(L'^', output);
   writeEscaped(sf, output);
@@ -829,7 +702,7 @@ FSTProcessor::printUnknownWord(wstring const &sf, FILE *output)
   fputwc_unlocked(L'*', output);
   writeEscaped(sf, output);
   fputwc_unlocked(L'$', output);
-  // first_word = false;
+  alnum_found = false;
 }
 
 unsigned int
