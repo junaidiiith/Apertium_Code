@@ -151,7 +151,7 @@ FSTProcessor::readFullBlock(FILE *input, wchar_t const delim1, wchar_t const del
   else
   { 
     // wcout << "itag is" << i_tag1 << "n_time is" << n_time << endl;
-    if(!alnum_found && n_time == 0)
+    if((!alnum_found && n_time == 0) || (alnum_found && first_time)) 
       i_tag1 = L"";
     i_tag2 = L"";
     first_time = true;
