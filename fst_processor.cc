@@ -55,6 +55,7 @@ isLastBlankTM(false)
   compoundOnlyLSymbol = 0;
   compoundRSymbol = 0;
   compound_max_elements = 4;
+  generator = false;
 
   initial_state = new State();
   current_state = new State();
@@ -77,7 +78,7 @@ FSTProcessor::readEscaped(FILE *input)
 {
   if(feof(input))
   {
-    wcout << "\nIn readEscaped" << endl;
+    wcerr << "\nIn readEscaped" << endl;
     streamError();
   }
 
@@ -85,7 +86,7 @@ FSTProcessor::readEscaped(FILE *input)
 
   if(feof(input) || escaped_chars.find(val) == escaped_chars.end())
   {
-    wcout << "\nfeof(input) || escaped_chars.find(val) == escaped_chars.end()\n";
+    wcerr << "\nfeof(input) || escaped_chars.find(val) == escaped_chars.end()\n";
     streamError();
   }
 
@@ -113,38 +114,45 @@ FSTProcessor::readFullBlock(FILE *input, wchar_t const delim1, wchar_t const del
     }
   }
 
-  // wcout << "result is" << result << endl;
+  // wcerr << "result is" << result << endl;
   if(c != delim2)
   {
     streamError(); 
   }
-  if(result[1]==L'{')
-  { 
-    n_time += 1;
-    if(n_time > 1)
-    {
-      i_tag2 = result;
-    }
-    else
-    {
-      if(alnum_found)
+
+  if(!generator)
+  {
+    if(result[1]==L'{')
+    { 
+      n_time += 1;
+      if(n_time > 1)
       {
-        i_tag1 = L"";
         i_tag2 = result;
       }
       else
-        i_tag1 = result;
+      {
+        if(alnum_found)
+        {
+          i_tag1 = L"";
+          i_tag2 = result;
+        }
+        else
+          i_tag1 = result;
+      }
+
+      result = L"";
+      first_time = false;
+
     }
-
-    result = L"";
-    first_time = false;
-
+    else
+    { 
+      first_time = true;
+    }
+    return result;
   }
   else
-  { 
-    first_time = true;
-  }
-  return result;
+    return result;
+
 }
 
 int
@@ -183,7 +191,7 @@ FSTProcessor::readAnalysis(FILE *input)
         val = static_cast<wchar_t>(fgetwc_unlocked(input));
         if(escaped_chars.find(val) == escaped_chars.end())
         {
-          wcout << "\nreadAnalysis error\n";
+          wcerr << "\nreadAnalysis error\n";
           streamError();
         }
         // if(isalnum((char)val))
@@ -192,7 +200,7 @@ FSTProcessor::readAnalysis(FILE *input)
         return val;
 
       default:
-        wcout << "default readAnalysis error\n";
+        wcerr << "default readAnalysis error\n";
         streamError();
     }
   }
@@ -205,7 +213,6 @@ FSTProcessor::readAnalysis(FILE *input)
       i_tag2 = L"";
       i_tag1 = L"";
     }
-    // wcout << "character is " << val <<"this\n";
   }
   input_buffer.add(val);
   return val;
@@ -246,7 +253,7 @@ FSTProcessor::readTMAnalysis(FILE *input)
         val = static_cast<wchar_t>(fgetwc_unlocked(input));
         if(escaped_chars.find(val) == escaped_chars.end())
         {
-          wcout << "readTMAnalysis error\n";
+          wcerr << "readTMAnalysis error\n";
           streamError();
         }
         input_buffer.add(static_cast<int>(val));
@@ -276,7 +283,7 @@ FSTProcessor::readTMAnalysis(FILE *input)
         break;
 
       default:
-        wcout << "default readTMAnalysis error\n";
+        wcerr << "default readTMAnalysis error\n";
         streamError();
     }
   }
@@ -316,7 +323,7 @@ FSTProcessor::readPostgeneration(FILE *input)
       val = static_cast<wchar_t>(fgetwc_unlocked(input));
       if(escaped_chars.find(val) == escaped_chars.end())
       { 
-        wcout << "readPostgeneration error";
+        wcerr << "readPostgeneration error";
         streamError();
       }
       input_buffer.add(static_cast<int>(val));
@@ -440,7 +447,7 @@ FSTProcessor::readGeneration(FILE *input, FILE *output)
     {
       if(feof(input))
       {
-        wcout << "readGeneration error\n";
+        wcerr << "readGeneration error\n";
 	streamError();
       }
       cad += static_cast<wchar_t>(val);
@@ -530,7 +537,7 @@ FSTProcessor::readBilingual(FILE *input, FILE *output)
     {
       if(feof(input))
       {
-        wcout << "readBilingual error\n";
+        wcerr << "readBilingual error\n";
 	streamError();
       }
       cad += static_cast<wchar_t>(val);
@@ -805,6 +812,7 @@ FSTProcessor::initTMAnalysis()
 void
 FSTProcessor::initGeneration()
 {
+  generator = true;
   calcInitial();
   for(map<wstring, TransExe, Ltstr>::iterator it = transducers.begin(),
                                              limit = transducers.end();
@@ -2878,7 +2886,7 @@ FSTProcessor::readSAO(FILE *input)
       }
       else
       {
-        wcout << "readSAO error\n";
+        wcerr << "readSAO error\n";
         streamError();
       }
     }
@@ -2891,13 +2899,13 @@ FSTProcessor::readSAO(FILE *input)
       }
       else
       { 
-        wcout << "some streamError\n";
+        wcerr << "some streamError\n";
         streamError();
       }
     }
     else
     { 
-      wcout << "some other streamError\n";
+      wcerr << "some other streamError\n";
       streamError();
     }
   }

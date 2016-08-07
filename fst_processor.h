@@ -181,6 +181,8 @@ private:
    */
   int compound_max_elements;
 
+  bool generator;
+
   /**
    * Prints an error of input stream and exits
    */
