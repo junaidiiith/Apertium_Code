@@ -186,13 +186,12 @@ private:
   /**
    * Prints an error of input stream and exits
    */
+   bool in_inline_blank;
 
-  bool alnum_found;
+  wstring temp_blank;
+  bool non_inline;
   bool printed_word;
-  bool first_time;
-  int n_time;
-  wstring i_tag1;
-  wstring i_tag2;
+  wstring last_blank;
 
 
   void streamError();
